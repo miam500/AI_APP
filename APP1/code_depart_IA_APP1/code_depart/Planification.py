@@ -48,10 +48,12 @@ def look_map(mazefile):
             elif grid[i][j] == 'C':
                 up, down, left, right = look_around((i,j), grid)
                 mat_tile[i][j] = Tile(coin=True, up=up, down=down, left=left, right=right, pos=(i,j))
+            elif grid[i][j] == 'M':
+                up, down, left, right = look_around((i, j), grid)
+                mat_tile[i][j] = Tile(monster=True, up=up, down=down, left=left, right=right, pos=(i, j))
             elif grid[i][j] == 'E':
                 mat_tile[i][j] = Tile(goal=True, pos=(i,j))
-    list_Tile = []
-    return list_Tile
+    return mat_tile
 
 def look_around(pos, grid):
     up, down, left, right = False, False, False, False
