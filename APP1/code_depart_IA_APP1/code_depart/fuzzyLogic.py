@@ -2,6 +2,7 @@ import numpy as np
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 import matplotlib.pyplot as plt
+from Game2D import 
 
 def createFuzzyController():
     # TODO: Create the fuzzy variables for inputs and outputs.
