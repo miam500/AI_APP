@@ -137,8 +137,7 @@ class App:
         for monster in self.maze.monsterList:
             if self.player.get_rect().colliderect(monster.rect):
                 return monster
-            else:
-                return False
+        return False
 
     def on_exit(self):
         return self.player.get_rect().colliderect(self.maze.exit)
