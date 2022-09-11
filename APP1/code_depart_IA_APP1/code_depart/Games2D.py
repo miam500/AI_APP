@@ -1,9 +1,15 @@
 from pygame.locals import *
 import pygame
+import numpy as np
 
 from Player import *
 from Maze import *
 from Constants import *
+import genetic
+from Planification import Astar
+
+from code_depart_IA_APP1.code_depart.Maze import Maze
+from code_depart_IA_APP1.code_depart.Player import Player
 
 
 class App:
@@ -24,7 +30,7 @@ class App:
         self.timer = 0.0
         self.player = Player()
         self.maze = Maze(mazefile)
-
+        #self.plan=Astar(mazefile)
     def on_init(self):
         pygame.init()
         self._display_surf = pygame.display.set_mode((self.windowWidth, self.windowHeight), pygame.HWSURFACE)
@@ -56,18 +62,25 @@ class App:
         # Utility functions for AI
         if keys[K_p]:
             self.maze.make_perception_list(self.player, self._display_surf)
+            print(self.maze.make_perception_list(self.player, self._display_surf))
             # returns a list of 4 lists of pygame.rect inside the perception radius
             # the 4 lists are [wall_list, obstacle_list, item_list, monster_list]
             # item_list includes coins and treasure
 
         if keys[K_m]:
             for monster in self.maze.monsterList:
+                results=genetic.trainGA(monster)
+                self.player.set_attributes(results)
                 print(monster.mock_fight(self.player))
+            import time
+            time.sleep(1)
             # returns the number of rounds you win against the monster
             # you need to win all four rounds to beat it
 
         if (keys[K_ESCAPE]):
             self._running = False
+        if (keys[K_t]):
+            print()
 
     # FONCTION À Ajuster selon votre format d'instruction
     def on_AI_input(self, instruction):
@@ -136,6 +149,8 @@ class App:
     def on_monster_collision(self):
         for monster in self.maze.monsterList:
             if self.player.get_rect().colliderect(monster.rect):
+                results=genetic.trainGA(monster)
+                self.player.set_attributes(results)
                 return monster
         return False
 
