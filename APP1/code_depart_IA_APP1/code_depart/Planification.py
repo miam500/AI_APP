@@ -15,19 +15,39 @@ class Tile:
         self.treasure = False
         self.monster = False
         self.block = False
-        self.father = Tile()
+        #self.father = Tile()
         self.h = 0
         self.g = 0
 
+    def __getitem__(self):
+        return self.pos
+
 class Astar:
-    def __init__(self, roadmap, start, goal):
-        self.roadmap = roadmap
-        self.start = start
-        self.goal = goal
+    def __init__(self, roadmap):
+        self.init_roadmap(roadmap)
+        self.find_start_goal()
         self.openQ = PriorityQueue()
         self.closedQ = []
 
         self.openQ.put(self.calculate_cost(self.roadmap[self.start[0]][self.start[1]]), self.roadmap[self.start[0]][self.start[1]])
+
+    def init_roadmap(self,roadmap):
+        self.roadmap=[]
+        with open(roadmap) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            for row in csv_reader:
+                tilerow=[]
+                for item in row:
+
+                    self.roadmap.append(row)
+
+    def find_start_goal(self):
+        for i,row in enumerate(self.roadmap):
+            for j,item in enumerate(row):
+                if item=='S':
+                    self.start = (i, j)
+                if item=='E':
+                    self.goal = (i, j)
 
     def find_path(self):
         while not self.expand_tree():

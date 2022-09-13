@@ -8,8 +8,6 @@ from Constants import *
 import genetic
 from Planification import Astar
 
-from code_depart_IA_APP1.code_depart.Maze import Maze
-from code_depart_IA_APP1.code_depart.Player import Player
 
 
 class App:
@@ -18,6 +16,7 @@ class App:
     player = 0
 
     def __init__(self, mazefile):
+        np.random.seed(9)
         self._running = True
         self._win = False
         self._dead = False
@@ -30,7 +29,7 @@ class App:
         self.timer = 0.0
         self.player = Player()
         self.maze = Maze(mazefile)
-        #self.plan=Astar(mazefile)
+        # self.plan=Astar(mazefile)
     def on_init(self):
         pygame.init()
         self._display_surf = pygame.display.set_mode((self.windowWidth, self.windowHeight), pygame.HWSURFACE)

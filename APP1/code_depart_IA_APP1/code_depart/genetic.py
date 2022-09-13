@@ -66,9 +66,6 @@ class Genetic:
 
     def init_pop(self):
         # Initialize the population as a matrix, where each individual is a binary string.
-        # Output:
-        # - POPULATION, a binary matrix whose rows correspond to encoded individuals.
-        #self.population = np.zeros((self.pop_size, self.num_params * self.nbits))
         self.population = np.random.randint(0, 2, size=(self.pop_size, self.num_params * self.nbits))
 
 
@@ -87,7 +84,6 @@ class Genetic:
         self.mutation_prob = mutation_prob
         self.crossover_prob = crossover_prob
         self.bestIndividual = np.zeros(self.num_params*self.nbits,)
-        #self.secondbest = np.zeros(self.num_params*self.nbits,)
         self.bestIndividualFitness = -1e10
         self.maxFitnessRecord = np.zeros((num_generations,))
         self.overallMaxFitnessRecord = np.zeros((num_generations,))
@@ -97,19 +93,23 @@ class Genetic:
     def eval_fit(self):
         # Evaluate the fitness function
         # Record the best individual and average of the current generation
-        # WARNING, number of arguments need to be adjusted if fitness function changes
         self.fitness=[]
         for individual in self.cvalues:
-            self.fitness.append(self.fit_fun.mock_fight(tempclass(individual))[1])
+            # self.fitness.append(self.fit_fun.mock_fight(tempclass(individual*1000000-2000000))[1])
+            self.fitness.append(self.fit_fun.mock_fight(tempclass(individual*2000000-1000000))[1])
 
         if np.max(self.fitness) > self.bestIndividualFitness:
             #keep second best individual
-            self.secondbest=self.bestIndividual
             self.bestIndividualFitness = np.max(self.fitness)
             self.bestIndividual = self.population[self.fitness == np.max(self.fitness)][0]
         self.maxFitnessRecord[self.current_gen] = np.max(self.fitness)
         self.overallMaxFitnessRecord[self.current_gen] = self.bestIndividualFitness
         self.avgMaxFitnessRecord[self.current_gen] = np.mean(self.fitness)
+
+        bestindices=np.argpartition(self.fitness,-1)[-1:]
+        self.bestIndividuals=self.population[bestindices]
+
+
 
     def print_progress(self):
         # Prints the results of the current generation in the console
@@ -121,149 +121,77 @@ class Genetic:
     def get_best_individual(self):
         # Prints the best individual for all of the simulated generations
         # TODO : Decode individual for better readability
-        #x = bin2ufloat(self.bestIndividual[:int(len(self.bestIndividual) / self.num_params)],self.nbits)
-        #y = bin2ufloat(self.bestIndividual[int(len(self.bestIndividual) / self.num_params):],self.nbits)
         list=[]
         for atom in np.array_split(self.bestIndividual, self.num_params):
-            list.append(bin2ufloat(atom,self.nbits)[0]*(2**self.nbits))
+            list.append(bin2ufloat(atom,self.nbits)[0]*2000000-1000000)
         return list
 
     def encode_individuals(self):
         # Encode the population from a vector of continuous values to a binary string.
-        # Input:
-        # - CVALUES, a vector of continuous values representing the parameters.
-        # - NBITS, the number of bits per indivual used for encoding.
-        # Output:
-        # - POPULATION, a binary matrix with each row encoding an individual.
-        # TODO: encode individuals into binary vectors
         for i,indiv in enumerate(self.cvalues):
-            self.population[i]=ufloat2bin(indiv/(2**self.nbits),self.nbits).flatten()
+            self.population[i]=ufloat2bin(indiv,self.nbits).flatten()
 
 
     def decode_individuals(self):
         # Decode an individual from a binary string to a vector of continuous values.
-        # Input:
-        # - POPULATION, a binary matrix with each row encoding an individual.
-        # - NUMPARAMS, the number of parameters for an individual.
-        # Output:
-        # - CVALUES, a vector of continuous values representing the parameters.
-        # TODO: decode individuals from binary vectors
-        #self.cvalues = np.zeros((self.pop_size, self.num_params))
         for i, indiv in enumerate(self.population):
 
             atoms=np.array_split(indiv, self.num_params)
 
             for j in range(self.num_params):
-                self.cvalues[i][j]=bin2ufloat(atoms[j],self.nbits)*(2**self.nbits)
-        # Keep best individual in population
-        #print(self.bestIndividual)
-        #self.cvalues[0] = bin2ufloat(self.bestIndividual,self.nbits)
+                self.cvalues[i][j]=bin2ufloat(atoms[j],self.nbits)[0]
+
     def doSelection(self):
         # Select pairs of individuals from the population.
-        # Input:
-        # - POPULATION, the binary matrix representing the population. Each row is an individual.
-        # - FITNESS, a vector of fitness values for the population.
-        # - NUMPAIRS, the number of pairs of individual to generate.
-        # Output:
-        # - PAIRS, a list of two ndarrays [IND1 IND2]  each encoding one member of the pair
-        # TODO: select pairs of individual in the population
 
         self.encode_individuals()
-        idx1 = np.random.randint(0, self.pop_size, (int(self.pop_size/2),))
-        idx2 = np.random.randint(0, self.pop_size, (int(self.pop_size/2),))
 
-        total=0
-        for item in self.fitness:
-            if item >= 0.5:
-                total=total+item
+        total=sum(self.fitness)
+        wheel=[fit/total for fit in self.fitness]
 
-        wheel=[fit/total if fit>=0.5 else 0 for fit in self.fitness]
-
-        idx1 = np.random.choice(self.pop_size,int(self.pop_size/2), p=wheel)
+        idx1 = np.random.choice(self.pop_size,int(self.pop_size/2),p=wheel)
         idx2 = np.random.choice(self.pop_size,int(self.pop_size/2), p=wheel)
-
+        # print(wheel)
         return [self.population[idx1, :], self.population[idx2, :]]
 
     def doCrossover(self, pairs):
-        # Perform a crossover operation between two individuals, with a given probability
-        # and constraint on the cutting point.
-        # Input:
-        # - PAIRS, a list of two ndarrays [IND1 IND2] each encoding one member of the pair
-        # - CROSSOVER_PROB, the crossover probability.
-        # - CROSSOVER_MODULO, a modulo-constraint on the cutting point. For example, to only allow cutting
-        #   every 4 bits, set value to 4.
-        #
-        # Output:
-        # - POPULATION, a binary matrix with each row encoding an individual.
-        # TODO: Perform a crossover between two individuals
+        # Perform a crossover operation between two individuals, with a given probability and constraint on the cutting point.
 
         halfpop1 = pairs[0]
         halfpop2 = pairs[1]
         for index, (parent1,parent2) in enumerate(zip(halfpop1,halfpop2)):
-            #split=np.random.randint(0,self.crossover_modulo)
 
-            genes_p1 = np.array_split(parent1, self.num_params)
-            genes_p2 = np.array_split(parent2, self.num_params)
-
-            # if np.random.rand() < self.crossover_prob:
-            for i in range(self.num_params):
-                if np.random.rand() < self.crossover_prob:
-
-                    genes_p1[i] = np.concatenate((genes_p1[i][:self.crossover_modulo], genes_p2[i][self.crossover_modulo:]))
-                    genes_p2[i] = np.concatenate((genes_p2[i][:self.crossover_modulo], genes_p1[i][self.crossover_modulo:]))
-
-            halfpop1[index] = np.concatenate(genes_p1)
-            halfpop2[index] = np.concatenate(genes_p2)
-            #halfpop1[index] = np.concatenate((parent1[:split], parent2[split:]))
-            #halfpop2[index] = np.concatenate((parent2[:split],parent1[split:]))
+            if np.random.rand() < self.crossover_prob:
+                split=np.random.randint(0,self.num_params)*self.crossover_modulo
+                halfpop1[index] = np.concatenate((parent1[:split], parent2[split:]))
+                halfpop2[index] = np.concatenate((parent2[:split], parent1[split:]))
 
         return np.vstack((halfpop1, halfpop2))
 
     def doMutation(self):
         # Perform a mutation operation over the entire population.
-        # Input:
-        # - POPULATION, the binary matrix representing the population. Each row is an individual.
-        # - MUTATION_PROB, the mutation probability.
-        # Output:
-        # - POPULATION, the new population.
-        # TODO: Apply mutation to the population
-        for index, indiv in enumerate(self.population):
-            for index2 in range(len(indiv)):
 
-                # check for mutation on every bit
-                if np.random.rand() < self.mutation_prob:
-                    # flip the bit
-                    indiv[index2] = 1 - indiv[index2]
-            self.population[index]=indiv
-        self.population[0]=self.bestIndividual
-        self.population[1]=self.secondbest
+        for index, indiv in enumerate(self.population):
+            if np.random.rand() < self.mutation_prob:
+                # flip the bit
+                mut=np.random.randint(self.nbits*self.num_params)
+                self.population[index][mut]=1 - indiv[mut]
+
+        for i in range(len(self.bestIndividuals)):
+            self.population[i]=self.bestIndividuals[i]
+
     def new_gen(self):
-        # Perform a the pair selection, crossover and mutation and
-        # generate a new population for the next generation.
-        # Input:
-        # - POPULATION, the binary matrix representing the population. Each row is an individual.
-        # Output:
-        # - POPULATION, the new population.
+        # Perform a the pair selection, crossover and mutation and generate a new population for the next generation.
         pairs = self.doSelection()
         self.population = self.doCrossover(pairs)
         self.doMutation()
         self.current_gen += 1
 
+    def printpop(self,oldpop):
+        print(np.array_equal(self.population,oldpop))
 
-# Binary-Float conversion functions
-# usage: [BVALUE] = ufloat2bin(CVALUE, NBITS)
-#
-# Convert floating point values into a binary vector
-#
-# Input:
-# - CVALUE, a scalar or vector of continuous values representing the parameters.
-#   The values must be a real non-negative float in the interval [0,1]!
-# - NBITS, the number of bits used for encoding.
-#
-# Output:
-# - BVALUE, the binary representation of the continuous value. If CVALUES was a vector,
-#   the output is a matrix whose rows correspond to the elements of CVALUES.
 def ufloat2bin(cvalue, nbits):
+    # Convert floating point values into a binary vector
     if nbits > 64:
         raise Exception('Maximum number of bits limited to 64')
     ivalue = np.round(cvalue * (2**nbits - 1)).astype(np.uint64)
@@ -279,22 +207,8 @@ def ufloat2bin(cvalue, nbits):
     bvalue[np.logical_and(ivalue >= 0, ivalue <= 2**nbits - 1)] = (np.bitwise_and(np.tile(ivalue[:, np.newaxis], (1, nbits)), np.tile(bitmask[np.newaxis, :], (len(cvalue), 1))) != 0)
     return bvalue
 
-
-# usage: [CVALUE] = bin2ufloat(BVALUE, NBITS)
-#
-# Convert a binary vector into floating point values
-#
-# Input:
-# - BVALUE, the binary representation of the continuous values. Can be a single vector or a matrix whose
-#   rows represent independent encoded values.
-#   The values must be a real non-negative float in the interval [0,1]!
-# - NBITS, the number of bits used for encoding.
-#
-# Output:
-# - CVALUE, a scalar or vector of continuous values representing the parameters.
-#   the output is a matrix whose rows correspond to the elements of CVALUES.
-#
 def bin2ufloat(bvalue, nbits):
+    # Convert a binary vector into floating point values
     if nbits > 64:
         raise Exception('Maximum number of bits limited to 64')
     ivalue = np.sum(bvalue * (2**np.arange(nbits)[np.newaxis, :]), axis=-1)
@@ -302,13 +216,10 @@ def bin2ufloat(bvalue, nbits):
     return cvalue
 
 def trainGA(monster):
-    # Fix random number generator seed for reproducible results
-    np.random.seed(1)
-
     # Set parameters for GA
     numparams = 12
-    nbits = 25
-    popsize = 100
+    nbits = 16
+    popsize = 40
 
     # Init GA
     ga_sim = Genetic(numparams, popsize, nbits)
@@ -316,18 +227,16 @@ def trainGA(monster):
 
     ga_sim.set_fit_fun(monster)
 
-    numGenerations = 300
+    numGenerations = 100
     mutationProb = 0.01
-    crossoverProb = 0.7
+    crossoverProb = 0.8
     ga_sim.set_sim_parameters(numGenerations, mutationProb, crossoverProb)
-    ga_sim.set_crossover_modulo(5)
+    ga_sim.set_crossover_modulo(nbits)
 
-    for i in range(ga_sim.num_generations):
-
+    while ga_sim.bestIndividualFitness<3.5 and ga_sim.current_gen!=numGenerations:
         ga_sim.decode_individuals()
         ga_sim.eval_fit()
-        if i % 25 == 0:
-            ga_sim.print_progress()
         ga_sim.new_gen()
+    print(ga_sim.current_gen)
     return ga_sim.get_best_individual()
 
