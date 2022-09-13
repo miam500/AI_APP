@@ -65,6 +65,48 @@ class App:
                 print(monster.mock_fight(self.player))
             # returns the number of rounds you win against the monster
             # you need to win all four rounds to beat it
+            
+            
+        if keys[K_t]:
+            self.fuzz.input['direction'] = -0.25
+            self.fuzz.input['x_ob'] = 0.0
+            #self.fuzz.input['y_ob'] = 0.0
+            for i in range(100):
+                wall, obstacle, item, monster = self.maze.make_perception_list(self.player, self._display_surf)
+                position = self.player.get_position()
+                obstruction = 0
+                if wall:
+                    for w in wall:
+                        ob_vector = ((w[0]-position[0])**2 + (w[1]-position[1])**2)**(1/2)
+                        if (w[0]-position[0])<0:
+                            ob_angle = degrees(atan2(w[0]-position[0], position[1]-w[1]))
+                        else:
+                            ob_angle = atan2(w[0]-position[0], w[1]-position[1])
+                        #obstruction = obstruction +
+                if obstacle:
+                    self.fuzz.input['x_ob'] = obstacle[0][0] - position[0]
+                    #self.fuzz.input['y_ob'] = obstacle[0][1] - position[1]
+                #elif item:
+                #    self.fuzz.input['x_'] = item[0]
+                #    self.fuzz.input['y_item'] = item[1]
+                #
+                #elif wall:
+                    #self.fuzz.input['item'] = None
+                    #self.fuzz.input['x_item'] = None
+                    #self.fuzz.input['y_item'] = None
+
+                #self.fuzz.input['direction'] =
+
+                self.fuzz.compute()
+
+                # TODO: get the output from the fuzzy system
+                movex = self.fuzz.output['move_x']*10
+                movey = self.fuzz.output['move_y']*10
+                print(position)
+
+                self.on_AI_input(movex, 'x')
+                self.on_AI_input(movey, 'y')
+                self.on_render()
 
         if (keys[K_ESCAPE]):
             self._running = False
