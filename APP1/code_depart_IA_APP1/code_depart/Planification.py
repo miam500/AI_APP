@@ -26,11 +26,14 @@ class Astar:
         self.populate_node(start, start)
 
     def find_path(self):
-        while not self.expand_tree():
-            pass
-        return self.generate_path()
+        with PrologMQI() as mqi:
+            with mqi.create_thread() as prolog_thread:
+                prolog_thread.query("[prolog/planification].")
+                while not self.expand_tree(prolog_thread):
+                    pass
+                return self.generate_path()
 
-    def expand_tree(self):
+    def expand_tree(self, prolog_thread):
         explored_node = self.node_dict[self.openQ.get()[1]]
 
         if explored_node.pos == self.goal:
@@ -42,11 +45,7 @@ class Astar:
         request_b = ", R)."
         request = request_a+request+request_b
 
-        result = []
-        with PrologMQI() as mqi:
-            with mqi.create_thread() as prolog_thread:
-                prolog_thread.query("[prolog/planification].")
-                result = prolog_thread.query(request)
+        result = prolog_thread.query(request)
 
         for direction in result[0]['R']:
             if direction == "left" and not (explored_node.pos[0], explored_node.pos[1] - 1) == explored_node.father:
@@ -87,7 +86,7 @@ class Astar:
             path_node = father_node
             father_node = self.node_dict[path_node.father]
             path = [path_node] + path
-        coordinate_path = []
+        coordinate_path = [self.start]
         for tile in path:
             coordinate_path.append(tile.pos)
         return coordinate_path
