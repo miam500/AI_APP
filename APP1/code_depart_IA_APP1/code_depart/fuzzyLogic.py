@@ -15,10 +15,10 @@ def createFuzzyController():
 
     #in
     direction = ctrl.Antecedent(np.linspace(-1, 1, 1000), 'direction')
-    #x_item = ctrl.Antecedent(np.linspace(-1, 1, 1000), 'x_item')
-    #y_item = ctrl.Antecedent(np.linspace(-1, 1, 1000), 'y_item')
-    x_ob = ctrl.Antecedent(np.linspace(-30, 30, 1000), 'x_ob')
-    #y_ob = ctrl.Antecedent(np.linspace(-1, 1, 1000), 'y_ob')
+    v_item = ctrl.Antecedent(np.linspace(-1, 1, 1000), 'v_item')
+    a_item = ctrl.Antecedent(np.linspace(-1, 1, 1000), 'a_item')
+    v_ob = ctrl.Antecedent(np.linspace(-30, 30, 1000), 'v_ob')
+    a_ob = ctrl.Antecedent(np.linspace(-1, 1, 1000), 'a_ob')
 
 
     #out
