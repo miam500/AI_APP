@@ -278,152 +278,226 @@ class App:
         return [up_perception, down_perception, left_perception, right_perception]
 
     def directional_perception(self, perception_list, position, direction):
-        score = 1000
+    score = 1000
 
-        if direction == "up":
+    if direction == "up":
 
-            for wall in perception_list[0]:
-                if wall[0] < position[0] + 20 and wall[1] < position[1] and wall[0] + 50 > position[0]:
-                    if wall[0] > position[0]:
-                        score = score - (20 - (wall[0] - position[0])) * (50 + (wall[1] + 50 - position[1]))
-                    elif position[0] <= wall[0] + 30:
-                        score = score - 20 * (50 + (wall[1] + 50 - position[1]))
-                    elif position[0] < wall[0] + 50:
-                        score = score - (wall[0] + 50 - position[0]) * (50 + (wall[1] + 50 - position[1]))
-            for obstacle in perception_list[1]:
-                if obstacle[0] + 10 > position[0] > obstacle[0] - 20 and obstacle[1] < position[1]:
-                    if obstacle[0] < position[0]:
-                        score = score - (obstacle[0] + 10 - position[0]) * (50 + (obstacle[1] + 10 - position[1]))
-                    elif obstacle[0] > position[0] > obstacle[0] - 10:
-                        score = score - 10 * (50 + (obstacle[1] + 10 - position[1]))
-                    else:
-                        score = score - (position[0] + 20 - obstacle[0]) * (50 + (obstacle[1] + 10 - position[1]))
-                elif obstacle[1] < position[1] + 5:
-                    score -= 100
-                elif obstacle[1] > position[1] + 5:
-                    score += 100
+        for wall in perception_list[0]:
+            if wall[0] < position[0] + 20 and wall[1] < position[1] and wall[0] + 50 > position[0]: 
+                if wall[0] > position[0]:
+                    score = score - (20 - (wall[0] - position[0])) * (50 + (wall[1] + 50 - position[1]))
+                elif position[0] <= wall[0] + 30:
+                    score = score - 20 * (50 + (wall[1] + 50 - position[1]))
+                elif position[0] < wall[0] + 50:
+                    score = score - (wall[0] + 50 - position[0]) * (50 + (wall[1] + 50 - position[1]))
+        for obstacle in perception_list[1]:
+            if obstacle[0] + 10 > position[0] > obstacle[0] - 20 and obstacle[1] < position[1]:
+                if obstacle[0] < position[0]:
+                    score = score - (obstacle[0] + 10 - position[0]) * (50 + (obstacle[1] + 10 - position[1]))
+                elif obstacle[0] > position[0] > obstacle[0] - 10:
+                    score = score - 10 * (50 + (obstacle[1] + 10 - position[1]))
+                else:
+                    score = score - (position[0] + 20 - obstacle[0]) * (50 + (obstacle[1] + 10 - position[1]))
+            elif obstacle[1] < position[1] + 5:
+                score -= 100
+            elif obstacle[1] > position[1] + 5:
+                score += 100
 
-            for item in perception_list[2]:
-                if item[0] + 10 > position[0] > item[0] - 20 and item[1] < position[1]:
-                    if item[0] < position[0]:
-                        score = score + 2 * (item[0] + 10 - position[0]) * (50 - (item[1] + 10 - position[1]))
-                    elif item[0] > position[0] > item[0] - 10:
-                        score = score + 20 * (50 - (item[1] + 10 - position[1]))
-                    else:
-                        score = score + 2 * (position[0] + 20 - item[0]) * (50 - (item[1] + 10 - position[1]))
-                if item[1] < position[1] + 5:
-                    score += 100
-                if item[1] > position[1] + 5:
-                    score -= 100
+        for item in perception_list[2]:
+            if item[0] + 10 > position[0] > item[0] - 20 and item[1] < position[1]:
+                if item[0] < position[0]:
+                    score = score + 2 * (item[0] + 10 - position[0]) * (50 - (item[1] + 10 - position[1]))
+                elif item[0] > position[0] > item[0] - 10:
+                    score = score + 20 * (50 - (item[1] + 10 - position[1]))
+                else:
+                    score = score + 2 * (position[0] + 20 - item[0]) * (50 - (item[1] + 10 - position[1]))
+            if item[1] < position[1] + 5:
+                score += 100
+            if item[1] > position[1] + 5:
+                score -= 100
 
-        elif direction == "down":
+    elif direction == "down":
 
-            for wall in perception_list[0]:
-                if wall[0] < position[0] + 20 and wall[1] > position[1] and wall[0] + 50 > position[0]:
-                    if wall[0] > position[0]:
-                        score = score - (20 - (wall[0] - position[0])) * (50 + (position[1] + 20 - wall[1]))
-                    elif position[0] <= wall[0] + 30:
-                        score = score - 20 * (50 + (position[1] + 20 - wall[1]))
-                    elif position[0] < wall[0] + 50:
-                        score = score - (wall[0] + 50 - position[0]) * (50 + (position[1] + 20 - wall[1]))
-            for obstacle in perception_list[1]:
-                if obstacle[0] + 10 > position[0] > obstacle[0] - 20 and obstacle[1] > position[1]:
-                    if obstacle[0] < position[0]:
-                        score = score - (obstacle[0] + 10 - position[0]) * (50 + (position[1] + 20 - obstacle[1]))
-                    elif obstacle[0] > position[0] > obstacle[0] - 10:
-                        score = score - 10 * (50 + (position[1] + 20 - obstacle[1]))
-                    else:
-                        score = score - (position[0] + 20 - obstacle[0]) * (50 + (position[1] + 20 - obstacle[1]))
-                elif obstacle[1] > position[1] + 5:
-                    score -= 100
-                elif obstacle[1] < position[1] + 5:
-                    score += 100
+        for wall in perception_list[0]:
+            if wall[0] < position[0] + 20 and wall[1] > position[1] and wall[0] + 50 > position[0]:
+                if wall[0] > position[0]:
+                    score = score - (20 - (wall[0] - position[0])) * (50 + (position[1] + 20 - wall[1]))
+                elif position[0] <= wall[0] + 30:
+                    score = score - 20 * (50 + (position[1] + 20 - wall[1]))
+                elif position[0] < wall[0] + 50:
+                    score = score - (wall[0] + 50 - position[0]) * (50 + (position[1] + 20 - wall[1]))
+        for obstacle in perception_list[1]:
+            if obstacle[0] + 10 > position[0] > obstacle[0] - 20 and obstacle[1] > position[1]:
+                if obstacle[0] < position[0]:
+                    score = score - (obstacle[0] + 10 - position[0]) * (50 + (position[1] + 20 - obstacle[1]))
+                elif obstacle[0] > position[0] > obstacle[0] - 10:
+                    score = score - 10 * (50 + (position[1] + 20 - obstacle[1]))
+                else:
+                    score = score - (position[0] + 20 - obstacle[0]) * (50 + (position[1] + 20 - obstacle[1]))
+            elif obstacle[1] > position[1] + 5:
+                score -= 100
+            elif obstacle[1] < position[1] + 5:
+                score += 100
 
-            for item in perception_list[2]:
-                if item[0] + 10 > position[0] > item[0] - 20 and item[1] > position[1]:
-                    if item[0] < position[0]:
-                        score = score + 2 * (item[0] + 10 - position[0]) * (50 - (position[1] + 20 - item[1]))
-                    elif item[0] > position[0] > item[0] - 10:
-                        score = score + 20 * (50 - (position[1] + 20 - item[1]))
-                    else:
-                        score = score + 2 * (position[0] + 20 - item[0]) * (50 - (position[1] + 20 - item[1]))
-                if item[1] > position[1] + 5:
-                    score += 100
-                if item[1] < position[1] + 5:
-                    score -= 100
+        for item in perception_list[2]:
+            if item[0] + 10 > position[0] > item[0] - 20 and item[1] > position[1]:
+                if item[0] < position[0]:
+                    score = score + 2 * (item[0] + 10 - position[0]) * (50 - (position[1] + 20 - item[1]))
+                elif item[0] > position[0] > item[0] - 10:
+                    score = score + 20 * (50 - (position[1] + 20 - item[1])) + 10
+                else:
+                    score = score + 2 * (position[0] + 20 - item[0]) * (50 - (position[1] + 20 - item[1]))
+            if item[1] > position[1] + 5:
+                score += 100
+            if item[1] < position[1] + 5:
+                score -= 100
 
-        elif direction == "left":
+    elif direction == "left":
 
-            for wall in perception_list[0]:
-                if wall[1] < position[1] + 20 and wall[0] < position[0] and wall[1] + 50 > position[1]:
-                    if wall[1] > position[1]:
-                        score = score - (20 - (wall[1] - position[1])) * (50 + (wall[0] + 50 - position[0]))
-                    elif position[1] <= wall[1] + 30:
-                        score = score - 20 * (50 + (wall[0] + 50 - position[0]))
-                    elif position[1] < wall[1] + 50:
-                        score = score - (wall[1] + 50 - position[1]) * (50 + (wall[0] + 50 - position[0]))
-            for obstacle in perception_list[1]:
-                if obstacle[1] + 10 > position[1] > obstacle[1] - 20 and position[0] > obstacle[0]:
-                    if obstacle[1] < position[1]:
-                        score = score - (obstacle[1] + 10 - position[1]) * (50 + (obstacle[0] - position[0] + 10))
-                    elif obstacle[1] > position[1] > obstacle[1] - 10:
-                        score = score - 10 * (50 + (obstacle[0] - position[0] + 10))
-                    else:
-                        score = score - (position[1] + 20 - obstacle[1]) * (50 + (obstacle[0] - position[0] + 10))
-                elif obstacle[0] < position[0] + 5:
-                    score -= 100
-                elif obstacle[0] > position[0] + 5:
-                    score += 100
+        for wall in perception_list[0]:
+            if wall[1] < position[1] + 20 and wall[0] < position[0] and wall[1] + 50 > position[1]:
+                if wall[1] > position[1]:
+                    score = score - (20 - (wall[1] - position[1])) * (50 + (wall[0] + 50 - position[0]))
+                elif position[1] <= wall[1] + 30:
+                    score = score - 20 * (50 + (wall[0] + 50 - position[0]))
+                elif position[1] < wall[1] + 50:
+                    score = score - (wall[1] + 50 - position[1]) * (50 + (wall[0] + 50 - position[0]))
+        for obstacle in perception_list[1]:
+            if obstacle[1] + 10 > position[1] > obstacle[1] - 20 and position[0] > obstacle[0]:
+                if obstacle[1] < position[1]:
+                    score = score - (obstacle[1] + 10 - position[1]) * (50 + (obstacle[0] - position[0] + 10))
+                elif obstacle[1] > position[1] > obstacle[1] - 10:
+                    score = score - 10 * (50 + (obstacle[0] - position[0] + 10))
+                else:
+                    score = score - (position[1] + 20 - obstacle[1]) * (50 + (obstacle[0] - position[0] + 10))
+            elif obstacle[0] < position[0] + 5:
+                score -= 100
+            elif obstacle[0] > position[0] + 5:
+                score += 100
 
-            for item in perception_list[2]:
-                if item[1] + 10 > position[1] > item[1] - 20 and position[0] > item[0]:
-                    if item[1] < position[1]:
-                        score = score + 2 * (item[1] + 10 - position[1]) * (50 - (item[0] - position[0] + 10))
-                    elif item[1] > position[1] > item[1] - 10:
-                        score = score + 20 * (50 - (item[0] - position[0] + 10))
-                    else:
-                        score = score + 2 *(position[1] + 20 - item[1]) * (50 - (item[0] - position[0] + 10))
-                elif item[0] < position[0] + 5:
-                    score += 100
-                elif item[0] > position[0] + 5:
-                    score -= 100
+        for item in perception_list[2]:
+            if item[1] + 10 > position[1] > item[1] - 20 and position[0] > item[0]:
+                if item[1] < position[1]:
+                    score = score + 2 * (item[1] + 10 - position[1]) * (50 - (item[0] - position[0] + 10))
+                elif item[1] > position[1] > item[1] - 10:
+                    score = score + 20 * (50 - (item[0] - position[0] + 10))
+                else:
+                    score = score + 2 *(position[1] + 20 - item[1]) * (50 - (item[0] - position[0] + 10))
+            elif item[0] < position[0] + 5:
+                score += 100
+            elif item[0] > position[0] + 5:
+                score -= 100
 
-        elif direction == "right":
+    elif direction == "right":
 
-            for wall in perception_list[0]:
-                if wall[1] < position[1] + 20 and wall[0] > position[0] and wall[1] + 50 > position[1]:
-                    if wall[1] > position[1]:
-                        score = score - (20 - (wall[1] - position[1])) * (50 + (position[0] + 20 - wall[0]))
-                    elif position[1] <= wall[1] + 30:
-                        score = score - 20 * (50 + (position[0] + 20 - wall[0]))
-                    elif position[1] < wall[1] + 50:
-                        score = score - (wall[1] + 50 - position[1]) * (50 + (position[0] + 20 - wall[0]))
-            for obstacle in perception_list[1]:
-                if obstacle[1] + 10 > position[1] > obstacle[1] - 20 and position[0] < obstacle[0]:
-                    if obstacle[1] < position[1]:
-                        score = score - (obstacle[1] + 10 - position[1]) * (50 + (position[0] + 20 - obstacle[0]))
-                    elif obstacle[1] > position[1] > obstacle[1] - 10:
-                        score = score - 10 * (50 + (position[0] - obstacle[0] + 10))
-                    else:
-                        score = score - (position[1] + 20 - obstacle[1]) * (50 + (position[0] + 20 - obstacle[0]))
-                elif obstacle[1] > position[1] + 5:
-                    score -= 100
-                elif obstacle[1] < position[1] + 5:
-                    score += 100
+        for wall in perception_list[0]:
+            if wall[1] < position[1] + 20 and wall[0] > position[0] and wall[1] + 50 > position[1]:
+                if wall[1] > position[1]:
+                    score = score - (20 - (wall[1] - position[1])) * (50 + (position[0] + 20 - wall[0]))
+                elif position[1] <= wall[1] + 30:
+                    score = score - 20 * (50 + (position[0] + 20 - wall[0]))
+                elif position[1] < wall[1] + 50:
+                    score = score - (wall[1] + 50 - position[1]) * (50 + (position[0] + 20 - wall[0]))
 
-            for item in perception_list[2]:
-                if item[1] + 10 > position[1] > item[1] - 20 and position[0] < item[0]:
-                    if item[1] < position[1]:
-                        score = score + 2 * (item[1] + 10 - position[1]) * (50 - (position[0] + 20 - item[0]))
-                    elif item[1] > position[1] > item[1] - 10:
-                        score = score + 20 * (50 - (position[0] + 20 - item[0]))
-                    else:
-                        score = score + 2 * (position[1] + 20 - item[1]) * (50 - (position[0] + 20 - item[0]))
-                elif item[0] > position[0] + 5:
-                    score += 100
-                elif item[0] < position[0] + 5:
-                    score -= 100
+        for obstacle in perception_list[1]:
+            if obstacle[1] + 10 > position[1] > obstacle[1] - 20 and position[0] < obstacle[0]:
+                if obstacle[1] < position[1]:
+                    score = score - (obstacle[1] + 10 - position[1]) * (50 + (position[0] + 20 - obstacle[0]))
+                elif obstacle[1] > position[1] > obstacle[1] - 10:
+                    score = score - 10 * (50 + (position[0] - obstacle[0] + 10))
+                else:
+                    score = score - (position[1] + 20 - obstacle[1]) * (50 + (position[0] + 20 - obstacle[0]))
+            elif obstacle[1] > position[1] + 5:
+                score -= 100
+            elif obstacle[1] < position[1] + 5:
+                score += 100
 
-        if score < 0:
-            score = 0
-        return int(score/20)
+        for item in perception_list[2]:
+            if item[1] + 10 > position[1] > item[1] - 20 and position[0] < item[0]:
+                if item[1] < position[1]:
+                    score = score + 2 * (item[1] + 10 - position[1]) * (50 - (position[0] + 20 - item[0]))
+                elif item[1] > position[1] > item[1] - 10:
+                    score = score + 20 * (50 - (position[0] + 20 - item[0]))
+                else:
+                    score = score + 2 * (position[1] + 20 - item[1]) * (50 - (position[0] + 20 - item[0]))
+            elif item[0] > position[0] + 5:
+                score += 100
+            elif item[0] < position[0] + 5:
+                score -= 100
+
+
+    elif direction == "right_up":
+        for wall in perception_list[0]:
+            if wall[0] > position[0] + 20 and wall[1] < position[1]:
+                score = score - (20 - (wall[0] - position[0])) * (50 + (wall[1] + 50 - position[1]))
+        for obstacle in perception_list[1]:
+            if obstacle[0] + 10 > position[0] + 20  and obstacle[1] < position[1]:
+                    score = score - (obstacle[0] + 10 - position[0]) * (50 + (obstacle[1] + 10 - position[1]))
+            elif obstacle[1] < position[1] + 5:
+                score -= 100
+            elif obstacle[1] > position[1] + 5:
+                   score += 100
+        for item in perception_list[2]:
+            if item[0] > position[0] + 20 and item[1] < position[1]:
+                score = score + 2 * (position[0] + 20 - item[0]) * (50 - (item[1] + 10 - position[1]))
+            if item[1] < position[1] + 5:
+                score += 100
+            if item[1] > position[1] + 5:
+                score -= 100
+
+    elif direction == "right_down":
+        for wall in perception_list[0]:
+            if wall[0] > position[0] + 20 and wall[1] > position[1]:
+                score = score - (20 - (wall[0] - position[0])) * (50 + (position[1] + 20 - wall[1]))
+        for obstacle in perception_list[1]:
+            if obstacle[0] + 10 > position[0] + 20  and obstacle[1] > position[1]:
+                    score = score - (position[0] + 20 - obstacle[0]) * (50 + (position[1] + 20 - obstacle[1]))
+            elif obstacle[1] < position[1] + 5:
+                score -= 100
+            elif obstacle[1] > position[1] + 5:
+                   score += 100
+        for item in perception_list[2]:
+            if item[0] > position[0] + 20 and item[1] > position[1]:
+                score = score + 2 * (position[0] + 20 - item[0]) * (50 - (position[1] + 20 - item[1]))
+            if item[1] < position[1] + 5:
+                score += 100
+            if item[1] > position[1] + 5:
+                score -= 100
+
+    elif direction == "left_up":
+        for wall in perception_list[0]:
+            if wall[0] < position[0] + 20 and wall[1] < position[1]:
+                score = score - (wall[0] + 50 - position[0]) * (50 + (wall[1] + 50 - position[1]))
+        for obstacle in perception_list[1]:
+            if obstacle[0] + 10 < position[0]  and obstacle[1] < position[1]:
+                    score = score - (position[0] + 20 - obstacle[0]) * (50 + (position[1] + 20 - obstacle[1]))
+            elif obstacle[1] < position[1] + 5:
+                score -= 100
+            elif obstacle[1] > position[1] + 5:
+                   score += 100
+        for item in perception_list[2]:
+            if item[0] + 10 < position[0] and item[1] < position[1]:
+                score = score + 2 * (position[0] + 20 - item[0]) * (50 - (position[1] + 20 - item[1]))
+            if item[1] < position[1] + 5:
+                score += 100
+            if item[1] > position[1] + 5:
+                score -= 100
+
+    elif direction == "left_down":
+        for wall in perception_list[0]:
+            if wall[0] + 50 < position[0] and wall[1] > position[1]:
+                score = score - (wall[0] + 50 - position[0]) * (50 + (wall[1] + 50 - position[1]))
+        for obstacle in perception_list[1]:
+            if obstacle[0] + 10 < position[0] and obstacle[1] > position[1]:
+                    score = score - (position[0] + 20 - obstacle[0]) * (50 + (position[1] + 20 - obstacle[1]))
+            elif obstacle[1] < position[1] + 5:
+                score -= 100
+            elif obstacle[1] > position[1] + 5:
+                   score += 100
+        for item in perception_list[2]:
+            if item[0] + 10 < position[0] and item[1] > position[1]:
+                score = score + 2 * (position[0] + 20 - item[0]) * (50 - (position[1] + 20 - item[1]))
+            if item[1] < position[1] + 5:
+                score += 100
+    ​        if item[1] > position[1] + 5:
+                score -= 100
