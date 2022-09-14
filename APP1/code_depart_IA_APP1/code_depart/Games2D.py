@@ -293,11 +293,11 @@ class App:
             for obstacle in perception_list[1]:
                 if obstacle[0] + 10 > position[0] > obstacle[0] - 20 and obstacle[1] < position[1]:
                     if obstacle[0] < position[0]:
-                        score = score - 1.5 * (obstacle[0] + 10 - position[0]) * (50 + (obstacle[1] + 10 - position[1]))
+                        score = score - (obstacle[0] + 10 - position[0]) * (50 + (obstacle[1] + 10 - position[1]))
                     elif obstacle[0] > position[0] > obstacle[0] - 10:
-                        score = score - 15 * (50 + (obstacle[1] + 10 - position[1]))
+                        score = score - 10 * (50 + (obstacle[1] + 10 - position[1]))
                     else:
-                        score = score - 1.5 * (position[0] + 20 - obstacle[0]) * (50 + (obstacle[1] + 10 - position[1]))
+                        score = score - (position[0] + 20 - obstacle[0]) * (50 + (obstacle[1] + 10 - position[1]))
                 elif obstacle[1] < position[1] + 5:
                     score -= 100
                 elif obstacle[1] > position[1] + 5:
@@ -313,7 +313,7 @@ class App:
                         score = score + 2 * (position[0] + 20 - item[0]) * (50 - (item[1] + 10 - position[1]))
                 if item[1] < position[1] + 5:
                     score += 100
-                if item[1] > position[1] +5:
+                if item[1] > position[1] + 5:
                     score -= 100
 
         elif direction == "down":
@@ -329,11 +329,11 @@ class App:
             for obstacle in perception_list[1]:
                 if obstacle[0] + 10 > position[0] > obstacle[0] - 20 and obstacle[1] > position[1]:
                     if obstacle[0] < position[0]:
-                        score = score - 1.5 * (obstacle[0] + 10 - position[0]) * (50 + (position[1] + 20 - obstacle[1]))
+                        score = score - (obstacle[0] + 10 - position[0]) * (50 + (position[1] + 20 - obstacle[1]))
                     elif obstacle[0] > position[0] > obstacle[0] - 10:
-                        score = score - 15 * (50 + (position[1] + 20 - obstacle[1]))
+                        score = score - 10 * (50 + (position[1] + 20 - obstacle[1]))
                     else:
-                        score = score - 1.5 * (position[0] + 20 - obstacle[0]) * (50 + (position[1] + 20 - obstacle[1]))
+                        score = score - (position[0] + 20 - obstacle[0]) * (50 + (position[1] + 20 - obstacle[1]))
                 elif obstacle[1] > position[1] + 5:
                     score -= 100
                 elif obstacle[1] < position[1] + 5:
@@ -365,11 +365,11 @@ class App:
             for obstacle in perception_list[1]:
                 if obstacle[1] + 10 > position[1] > obstacle[1] - 20 and position[0] > obstacle[0]:
                     if obstacle[1] < position[1]:
-                        score = score - 1.5 * (obstacle[1] + 10 - position[1]) * (50 + (obstacle[0] - position[0] + 10))
+                        score = score - (obstacle[1] + 10 - position[1]) * (50 + (obstacle[0] - position[0] + 10))
                     elif obstacle[1] > position[1] > obstacle[1] - 10:
-                        score = score - 15 * (50 + (obstacle[0] - position[0] + 10))
+                        score = score - 10 * (50 + (obstacle[0] - position[0] + 10))
                     else:
-                        score = score - 1.5 * (position[1] + 20 - obstacle[1]) * (50 + (obstacle[0] - position[0] + 10))
+                        score = score - (position[1] + 20 - obstacle[1]) * (50 + (obstacle[0] - position[0] + 10))
                 elif obstacle[0] < position[0] + 5:
                     score -= 100
                 elif obstacle[0] > position[0] + 5:
@@ -401,11 +401,11 @@ class App:
             for obstacle in perception_list[1]:
                 if obstacle[1] + 10 > position[1] > obstacle[1] - 20 and position[0] < obstacle[0]:
                     if obstacle[1] < position[1]:
-                        score = score - 1.5 * (obstacle[1] + 10 - position[1]) * (50 + (position[0] + 20 - obstacle[0]))
+                        score = score - (obstacle[1] + 10 - position[1]) * (50 + (position[0] + 20 - obstacle[0]))
                     elif obstacle[1] > position[1] > obstacle[1] - 10:
-                        score = score - 15 * (50 + (position[0] - obstacle[0] + 10))
+                        score = score - 10 * (50 + (position[0] - obstacle[0] + 10))
                     else:
-                        score = score - 1.5 * (position[1] + 20 - obstacle[1]) * (50 + (position[0] + 20 - obstacle[0]))
+                        score = score - (position[1] + 20 - obstacle[1]) * (50 + (position[0] + 20 - obstacle[0]))
                 elif obstacle[1] > position[1] + 5:
                     score -= 100
                 elif obstacle[1] < position[1] + 5:
