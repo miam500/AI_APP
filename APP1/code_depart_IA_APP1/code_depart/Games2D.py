@@ -68,47 +68,22 @@ class App:
                 print(monster.mock_fight(self.player))
             # returns the number of rounds you win against the monster
             # you need to win all four rounds to beat it
-
         if keys[K_t]:
-            self.fuzz.input['direction'] = -0.25  # up: -0.75, -0.25, 0.25, 0.75
-            self.fuzz.input['x_ob'] = 0.0
+            # self.fuzz.input['direction'] = -0.25 #up: -0.75,down -0.25, left 0.25, right 0.75
             # self.fuzz.input['y_ob'] = 0.0
-            for i in range(100):
-                wall, obstacle, item, monster = self.maze.make_perception_list(self.player, self._display_surf)
-                position = self.player.get_position()
-                obstruction = 0
-                if wall:
-                    for w in wall:
-                        ob_vector = ((w[0] - position[0]) ** 2 + (w[1] - position[1]) ** 2) ** (1 / 2)
-                        if (w[0] - position[0]) < 0:
-                            ob_angle = degrees(atan2(w[0] - position[0], position[1] - w[1]))
-                            v1_theta = atan2(position[1], position[0])
-                            v2_theta = atan2(w[1], w[0])
-                            r = (v2_theta - v1_theta) * (180.0 / math.pi)
-                            #if r < 0:
-                            #    r % 360
-                            #print
-                            #r
-                        else:
-                            ob_angle = atan2(w[0] - position[0], w[1] - position[1])
-                        # obstruction = obstruction +
-                if obstacle:
-                    self.fuzz.input['x_ob'] = obstacle[0][0] - position[0]
-                    # self.fuzz.input['y_ob'] = obstacle[0][1] - position[1]
-                # elif item:
-                #    self.fuzz.input['x_'] = item[0]
-                #    self.fuzz.input['y_item'] = item[1]
-                #
-                # elif wall:
-                # self.fuzz.input['item'] = None
-                # self.fuzz.input['x_item'] = None
-                # self.fuzz.input['y_item'] = None
-                # self.fuzz.input['direction'] =
+            for i in range(1):
+                [up, down, left, right] = self.perception()
+                self.fuzz.input['up_p'] = up - 20
+                self.fuzz.input['down_p'] = down + 40
+                self.fuzz.input['left_p'] = left
+                self.fuzz.input['right_p'] = right
                 self.fuzz.compute()
+
                 # TODO: get the output from the fuzzy system
                 movex = self.fuzz.output['move_x'] * 10
                 movey = self.fuzz.output['move_y'] * 10
-                print(position)
+                print(movex, movey)
+
                 self.on_AI_input(movex, 'x')
                 self.on_AI_input(movey, 'y')
                 self.on_render()
@@ -121,18 +96,35 @@ class App:
             print(scores)
 
     # FONCTION À Ajuster selon votre format d'instruction
-    def on_AI_input(self, instruction):
-        if instruction == 'RIGHT':
-            self.move_player_right()
+    def on_AI_input(self, instruction, axe):
+        instruction = round(instruction + 0.5)
+        if instruction < 0:
+            instruction = instruction * -1
+            if axe == 'x':
+                for i in range(instruction):
+                    self.move_player_left()
+            else:
+                for i in range(instruction):
+                    self.move_player_up()
 
-        if instruction == 'LEFT':
-            self.move_player_left()
+        else:
+            if axe == 'x':
+                for i in range(instruction):
+                    self.move_player_right()
+            else:
+                for i in range(instruction):
+                    self.move_player_down()
 
-        if instruction == 'UP':
-            self.move_player_up()
-
-        if instruction == 'DOWN':
-            self.move_player_down()
+            # if instruction == 'LEFT':
+            #    self.move_player_left()
+            # if instruction == 'RIGHT':
+            #    self.move_player_right()
+            # if instruction == 'LEFT':
+            #    self.move_player_left()
+            # if instruction == 'UP':
+            #    self.move_player_up()
+            # if instruction == 'DOWN':
+            #    self.move_player_down()
 
     def move_player_right(self):
         self.player.moveRight()
@@ -382,7 +374,7 @@ class App:
                     elif item[1] > position[1] > item[1] - 10:
                         score = score + 20 * (50 - (item[0] - position[0] + 10))
                     else:
-                        score = score + 2 *(position[1] + 20 - item[1]) * (50 - (item[0] - position[0] + 10))
+                        score = score + 2 * (position[1] + 20 - item[1]) * (50 - (item[0] - position[0] + 10))
                 elif item[0] < position[0] + 5:
                     score += 100
                 elif item[0] > position[0] + 5:
