@@ -33,7 +33,7 @@ class Astar:
                 prolog_thread.query("[prolog/planification].")
                 while not self.expand_tree(prolog_thread):
                     pass
-                return self.generate_path()
+                return self.generate_tile_path()
 
     def expand_tree(self, prolog_thread):
         explored_node = self.node_dict[self.openQ.get()[1]]
@@ -90,7 +90,7 @@ class Astar:
             path = [path_node] + path
         coordinate_path = [self.start]
         for tile in path:
-            coordinate_path.append(tile.pos)
+            coordinate_path.append((int(tile.pos[0]+self.tile_size/2), int(tile.pos[1]+self.tile_size/2)))
 
         return coordinate_path
 

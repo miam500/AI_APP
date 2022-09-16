@@ -223,15 +223,22 @@ class App:
                 self._running = False
                 self._win = True
             self.on_render()
-            if self.path[step+1][0] - self.path[step][0] == -1:
-                self.deplacement(self.path[step+1], "LEFT")
-            if self.path[step+1][0] - self.path[step][0] == 1:
-                self.deplacement(self.path[step+1], "RIGHT")
-            if self.path[step+1][1] - self.path[step][1] == -1:
-                self.deplacement(self.path[step+1], "UP")
-            if self.path[step+1][1] - self.path[step][1] == 1:
-                self.deplacement(self.path[step+1], "DOWN")
-            step += 1
+            if self.path[step][0] - self.path[step][0] < 0:
+                self.deplacement(self.path[step], "LEFT")
+                if self.player.get_position()[0] < self.path[step][0]:
+                    step += 1
+            if self.path[step+1][0] - self.path[step][0] > 0:
+                self.deplacement(self.path[step], "RIGHT")
+                if self.player.get_position()[0] > self.path[step][0]:
+                    step += 1
+            if self.path[step+1][1] - self.path[step][1] < 0:
+                self.deplacement(self.path[step], "UP")
+                if self.player.get_position()[1] < self.path[step][1]:
+                    step += 1
+            if self.path[step+1][1] - self.path[step][1] > 0:
+                self.deplacement(self.path[step], "DOWN")
+                if self.player.get_position()[1] > self.path[step][1]:
+                    step += 1
             # do genetic thing
 
 
