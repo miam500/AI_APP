@@ -1,161 +1,115 @@
-# import numpy as np
-# import skfuzzy as fuzz
-# from skfuzzy import control as ctrl
-# import matplotlib.pyplot as plt
-# from Games2D import *
-#
-#
-# def createFuzzyController():
-#     # TODO: Create the fuzzy variables for inputs and outputs.
-#     # Defuzzification (defuzzify_method) methods for fuzzy variables:
-#     #    'centroid': Centroid of area
-#     #    'bisector': bisector of area
-#     #    'mom'     : mean of maximum
-#     #    'som'     : min of maximum
-#     #    'lom'     : max of maximum
-#     #in
-#     direction = ctrl.Antecedent(np.linspace(-1, 1, 1000), 'direction')
-#     v_item = ctrl.Antecedent(np.linspace(-1, 1, 1000), 'v_item')
-#     a_item = ctrl.Antecedent(np.linspace(-1, 1, 1000), 'a_item')
-#     v_ob = ctrl.Antecedent(np.linspace(-30, 30, 1000), 'v_ob')
-#     a_ob = ctrl.Antecedent(np.linspace(-1, 1, 1000), 'a_ob')
-#
-#     #out
-#     move_x = ctrl.Consequent(np.linspace(-1, 1, 10), 'move_x', defuzzify_method='centroid')
-#     move_y = ctrl.Consequent(np.linspace(-1, 1, 10), 'move_y', defuzzify_method='centroid')
-#     # Accumulation (accumulation_method) methods for fuzzy variables:
-#     #    np.fmax
-#     #    np.multiply
-#     move_x.accumulation_method = np.fmax
-#     move_y.accumulation_method = np.fmax
-#     # TODO: Create membership functions
-#     #dir = ['up', 'down', 'left', 'right']
-#     #direction.automf(names=dir)
-#     direction['up'] = fuzz.trimf(direction.universe, [-1, -0.75, -0.5])
-#     direction['down'] = fuzz.trimf(direction.universe, [-0.5, -0.25, 0])
-#     direction['left'] = fuzz.trimf(direction.universe, [0, 0.25, 0.5])
-#     direction['right'] = fuzz.trimf(direction.universe, [0.5, 0.75, 1])
-#     x_ob['left'] = fuzz.trapmf(x_ob.universe, [-30, -30, -10, 0])
-#     x_ob['right'] = fuzz.trapmf(x_ob.universe, [0, 10, 30, 30])
-#     move_x['left'] = fuzz.trapmf(move_x.universe, [-1, -1, 0, 0])
-#     move_x['right'] = fuzz.trapmf(move_x.universe, [0, 0, 1, 1])
-#     move_y['up'] = fuzz.trapmf(move_x.universe, [-1, -1, 0, 0])
-#     move_y['down'] = fuzz.trapmf(move_x.universe, [0, 0, 1, 1])
-#     # TODO: Define the rules.
-#     rules = []
-#     #-----------------------------------------------------------------------------------------------#
-#     rules.append(ctrl.Rule(antecedent=(direction['up']),
-#                            consequent=(move_x['left'], move_y['up'])))
-#     rules.append(ctrl.Rule(antecedent=(direction['down']),
-#                            consequent=(move_x['left'], move_y['down'])))
-#     rules.append(ctrl.Rule(antecedent=(direction['left']),
-#                            consequent=(move_x['left'], move_y['down'])))
-#     rules.append(ctrl.Rule(antecedent=(direction['right']),
-#                            consequent=(move_x['right'], move_y['up'])))
-#     # -----------------------------------------------------------------------------------------------#
-#     rules.append(ctrl.Rule(antecedent=(direction['up'] & x_ob['left']),
-#                            consequent=(move_x['right'], move_y['up'])))
-#     rules.append(ctrl.Rule(antecedent=(direction['down'] & x_ob['left']),
-#                            consequent=(move_x['right'], move_y['down'])))
-#     rules.append(ctrl.Rule(antecedent=(direction['left'] & x_ob['left']),
-#                            consequent=(move_x['left'], move_y['down'])))
-#     rules.append(ctrl.Rule(antecedent=(direction['right'] & x_ob['left']),
-#                            consequent=(move_x['right'], move_y['up'])))
-#     rules.append(ctrl.Rule(antecedent=(direction['up'] & x_ob['right']),
-#                            consequent=(move_x['left'], move_y['up'])))
-#     rules.append(ctrl.Rule(antecedent=(direction['down'] & x_ob['right']),
-#                            consequent=(move_x['left'], move_y['down'])))
-#     rules.append(ctrl.Rule(antecedent=(direction['left'] & x_ob['right']),
-#                            consequent=(move_x['left'], move_y['down'])))
-#     rules.append(ctrl.Rule(antecedent=(direction['right'] & x_ob['right']),
-#                            consequent=(move_x['right'], move_y['up'])))
-#
-#     for rule in rules:
-#         rule.and_func = np.fmin
-#         rule.or_func = np.fmax
-#
-#     #system
-#     system = ctrl.ControlSystem(rules)
-#     sim = ctrl.ControlSystemSimulation(system)
-#     return sim
-
-import numpy as np
+import gym
+import time
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 import matplotlib.pyplot as plt
-from Games2D import *
-
+import numpy as np
 
 def createFuzzyController():
     # TODO: Create the fuzzy variables for inputs and outputs.
     # Defuzzification (defuzzify_method) methods for fuzzy variables:
-    # 'centroid': Centroid of area
-    # 'bisector': bisector of area
-    # 'mom' : mean of maximum
-    # 'som' : min of maximum
-    # 'lom' : max of maximum
-    #in
-    direction = ctrl.Antecedent(np.linspace(-1, 1, 1000), 'direction')
-    up_p = ctrl.Antecedent(np.linspace(0, 170, 1000), 'up_p')
-    down_p = ctrl.Antecedent(np.linspace(0, 170, 1000), 'down_p')
-    left_p = ctrl.Antecedent(np.linspace(0, 170, 1000), 'left_p')
-    right_p = ctrl.Antecedent(np.linspace(0, 170, 1000), 'right_p')
-    #out
-    move_x = ctrl.Consequent(np.linspace(-1, 1, 10), 'move_x', defuzzify_method='centroid')
-    move_y = ctrl.Consequent(np.linspace(-1, 1, 10), 'move_y', defuzzify_method='centroid')
+    #    'centroid': Centroid of area
+    #    'bisector': bisector of area
+    #    'mom'     : mean of maximum
+    #    'som'     : min of maximum
+    #    'lom'     : max of maximum
+
+    # inputs
+    vertical = ctrl.Antecedent(np.linspace(-150, 150, 10000), 'verticle')
+    horizontal = ctrl.Antecedent(np.linspace(-150, 150, 10000), 'horizontal')
+
+    # outputs
+    vert_res = ctrl.Consequent(np.linspace(-1, 1, 100), 'vert_res', defuzzify_method='centroid')
+    horiz_res = ctrl.Consequent(np.linspace(-1, 1, 100), 'horiz_res', defuzzify_method='centroid')
+
+
     # Accumulation (accumulation_method) methods for fuzzy variables:
-    # np.fmax
-    # np.multiply
-    move_x.accumulation_method = np.fmax
-    move_y.accumulation_method = np.fmax
+    #    np.fmax
+    #    np.multiply
+    vert_res.accumulation_method = np.fmax
+    horiz_res.accumulation_method = np.fmax
+
     # TODO: Create membership functions
-    #dir = ['up', 'down', 'left', 'right']
-    #direction.automf(names=dir)
-    #direction['up'] = fuzz.trimf(direction.universe, [-1, -0.75, -0.5])
-    #direction['down'] = fuzz.trimf(direction.universe, [-0.5, -0.25, 0])
-    #direction['left'] = fuzz.trimf(direction.universe, [0, 0.25, 0.5])
-    #direction['right'] = fuzz.trimf(direction.universe, [0.5, 0.75, 1])
-    up_p['leave'] = fuzz.trapmf(up_p.universe, [0, 0, 20, 25])
-    up_p['go_to'] = fuzz.trapmf(up_p.universe, [0, 80, 170, 170])
-    down_p['leave'] = fuzz.trapmf(down_p.universe, [0, 0, 20, 25])
-    down_p['go_to'] = fuzz.trapmf(down_p.universe, [0, 80, 170, 170])
-    right_p['leave'] = fuzz.trapmf(right_p.universe, [0, 0, 20, 25])
-    right_p['go_to'] = fuzz.trapmf(right_p.universe, [0, 80, 170, 170])
-    left_p['leave'] = fuzz.trapmf(left_p.universe, [0, 0, 20, 25])
-    left_p['go_to'] = fuzz.trapmf(left_p.universe, [0, 80, 170, 170])
-    move_x['left'] = fuzz.trimf(move_x.universe, [-1, -1, 0])
-    move_x['right'] = fuzz.trimf(move_x.universe, [0, 1, 1])
-    move_y['up'] = fuzz.trimf(move_x.universe, [-1, -1, 0])
-    move_y['down'] = fuzz.trimf(move_x.universe, [0, 1, 1])
+    #zone['left'] = fuzz.trapmf(zone.universe, [-1, -1, -0.75, 0])
+    #zone['center'] = fuzz.trapmf(zone.universe, [-0.5, -0.25, 0.25, 0.5])
+    #zone['right'] = fuzz.trapmf(zone.universe, [0, 0.75, 1, 1])
+
+    vertical['up'] = fuzz.trapmf(vertical.universe, [-150, -150, -100, 20])
+    vertical['down'] = fuzz.trapmf(vertical.universe, [-20, 100, 150, 150])
+    horizontal['left'] = fuzz.trapmf(horizontal.universe, [-150, -150, -100, 20])
+    horizontal['right'] = fuzz.trapmf(horizontal.universe, [-20, 100, 150, 150])
+
+    vert_res['up'] = fuzz.trimf(vert_res.universe, [-1, -1, 0.2])
+    vert_res['down'] = fuzz.trimf(vert_res.universe, [-0.2, 1, 1])
+    horiz_res['left'] = fuzz.trimf(horiz_res.universe, [-1, -1, 0.2])
+    horiz_res['right'] = fuzz.trimf(horiz_res.universe, [-0.2, 1, 1])
+
     # TODO: Define the rules.
+    rules = [ctrl.Rule(antecedent=vertical['up'], consequent=vert_res['up']),
+             ctrl.Rule(antecedent=vertical['down'], consequent=vert_res['down']),
+             ctrl.Rule(antecedent=horizontal['left'], consequent=horiz_res['left']),
+             ctrl.Rule(antecedent=horizontal['right'], consequent=horiz_res['right'])]
 
-    rules = []
-    #------------------------------------------------------------------------------------------------------------------#
-    #-----------------------------------------------go_to--------------------------------------------------------------#
-    #------------------------------------------------------------------------------------------------------------------#
-    rules.append(ctrl.Rule(antecedent=(up_p['go_to']), consequent=(move_y['up'])))
-    rules.append(ctrl.Rule(antecedent=(down_p['go_to']), consequent=(move_y['down'])))
-    rules.append(ctrl.Rule(antecedent=(left_p['go_to']), consequent=(move_x['left'])))
-    rules.append(ctrl.Rule(antecedent=(right_p['go_to']), consequent=(move_x['right'])))
-    # -----------------------------------------------------------------------------------------------------------------#
-    # -----------------------------------------------LEAVE-------------------------------------------------------------#
-    # -----------------------------------------------------------------------------------------------------------------#
-    rules.append(ctrl.Rule(antecedent=(up_p['leave']), consequent=(move_y['down'])))
-    rules.append(ctrl.Rule(antecedent=(down_p['leave']), consequent=(move_y['up'])))
-    rules.append(ctrl.Rule(antecedent=(left_p['leave']), consequent=(move_x['right'])))
-    rules.append(ctrl.Rule(antecedent=(right_p['leave']), consequent=(move_x['left'])))
-    # -----------------------------------------------------------------------------------------------------------------#
-    # -----------------------------------------------down+x-------------------------------------------------------------#
-    # -----------------------------------------------------------------------------------------------------------------#
-    rules.append(ctrl.Rule(antecedent=(down_p['leave'] & left_p['leave']), consequent=(move_y['up'], move_x['right'])))
-    rules.append(ctrl.Rule(antecedent=(down_p['go_to'] & left_p['leave']), consequent=(move_y['down'], move_x['right'])))
-    rules.append(ctrl.Rule(antecedent=(down_p['leave']), consequent=(move_x['left'])))
-
+    # Conjunction (and_func) and disjunction (or_func) methods for rules:
+    #     np.fmin
+    #     np.fmax
     for rule in rules:
-    #somme ou somme ponderer possible
         rule.and_func = np.fmin
         rule.or_func = np.fmax
-    #system
+
     system = ctrl.ControlSystem(rules)
     sim = ctrl.ControlSystemSimulation(system)
     return sim
+
+
+# Press the green button in the gutter to run the script.
+if __name__ == '__main__':
+    # Create the environment and fuzzy controller
+    env = CartPoleEnv("human")
+    fuzz_ctrl = createFuzzyController()
+
+    # Display rules
+    print('------------------------ RULES ------------------------')
+    for rule in fuzz_ctrl.ctrl.rules:
+        print(rule)
+    print('-------------------------------------------------------')
+
+    # Display fuzzy variables
+    for var in fuzz_ctrl.ctrl.fuzzy_variables:
+        var.view()
+    plt.show()
+
+    VERBOSE = True
+
+    for episode in range(10):
+        print('Episode no.%d' % (episode))
+        env.reset()
+
+        isSuccess = True
+        action = np.array([0.0], dtype=np.float32)
+        for _ in range(100):
+            env.render()
+            time.sleep(0.01)
+
+            # Execute the action
+            observation, _, done, _ = env.step(action)
+            if done:
+                # End the episode
+                isSuccess = False
+                break
+
+            # Select the next action based on the observation
+            cartPosition, cartVelocity, poleAngle, poleVelocityAtTip = observation
+
+            # TODO: set the input to the fuzzy system
+            #fuzz_ctrl.input['zone'] = 0
+            fuzz_ctrl.input['delta'] = poleVelocityAtTip
+
+            fuzz_ctrl.compute()
+            if VERBOSE:
+                fuzz_ctrl.print_state()
+
+            # TODO: get the output from the fuzzy system
+            force = fuzz_ctrl.output['output1']
+
+            action = np.array(force, dtype=np.float32).flatten()

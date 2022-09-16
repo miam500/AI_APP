@@ -4,6 +4,7 @@ import pygame
 from Player import *
 from Maze import *
 from Constants import *
+import FuzzyLogic as fuzzy
 
 
 class App:
@@ -26,6 +27,7 @@ class App:
         self.timer = 0.0
         self.player = Player()
         self.maze = Maze(mazefile)
+        self.fuzz = fuzzy.createFuzzyController()
 
     def on_init(self):
         pygame.init()
@@ -73,15 +75,15 @@ class App:
             # self.fuzz.input['y_ob'] = 0.0
             for i in range(1):
                 [up, down, left, right] = self.perception()
-                self.fuzz.input['up_p'] = up - 20
-                self.fuzz.input['down_p'] = down + 40
-                self.fuzz.input['left_p'] = left
-                self.fuzz.input['right_p'] = right
+                self.fuzz.input['up'] = up
+                self.fuzz.input['down'] = down + 25
+                self.fuzz.input['left'] = left
+                self.fuzz.input['right'] = right
                 self.fuzz.compute()
 
                 # TODO: get the output from the fuzzy system
                 movex = self.fuzz.output['move_x'] * 10
-                movey = self.fuzz.output['move_y'] * 10
+                movey = self.fuzz.output['horisontal'] * 10
                 print(movex, movey)
 
                 self.on_AI_input(movex, 'x')
