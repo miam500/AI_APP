@@ -33,7 +33,7 @@ class App:
         self.tile_size = tile_size
         self.mazefile = mazefile
         self.fuzz = fuzzy.createFuzzyController()
-        self.planner = Planner(self.mazefile, self.tile_size)
+        self.planner = Planner(self.mazefile, self.tile_size, 'greedy')
         self.path = []
 
 
@@ -196,6 +196,7 @@ class App:
 
     def on_execute(self):
         self.on_init()
+        print('hello')
         step = 0
         while self._running:
             self._clock.tick(GAME_CLOCK)

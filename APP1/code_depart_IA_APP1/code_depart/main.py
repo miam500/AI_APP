@@ -10,6 +10,6 @@ if __name__ == '__main__':
     # Niveau 1 - avec obstacles - 'assets/mazeMedium_1'
     # Niveau 2 - avec obstacles et ennemis - 'assets/mazeMedium_2'
     fuzzy_ctrl = createFuzzyController()
-    theAPP = App('assets/mazeMedium_2', fuzzy_ctrl, 50)
+    theAPP = App('assets/mazeLarge_2', fuzzy_ctrl, 40)
     theAPP.on_execute()
 

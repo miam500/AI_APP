@@ -2,6 +2,7 @@ import csv
 from queue import PriorityQueue
 from swiplserver import PrologMQI
 import numpy as np
+import time
 
 
 class Tile:
@@ -22,10 +23,11 @@ class Astar:
         self.closedQ = []
         self.populate_node(start, start)
         self.tile_size = tile_size
-        self.down = [(i, int(self.tile_size/2)) for i in range(self.tile_size)]
-        self.up = [(i, int(self.tile_size / 2)) for i in range(self.tile_size, 0, -1)]
-        self.right = [(int(self.tile_size/2), i) for i in range(self.tile_size)]
-        self.left = [(int(self.tile_size / 2), i) for i in range(self.tile_size, 0, -1)]
+        self.iteration = 0
+        #self.down = [(i, int(self.tile_size/2)) for i in range(self.tile_size)]
+        #self.up = [(i, int(self.tile_size / 2)) for i in range(self.tile_size, 0, -1)]
+        #self.right = [(int(self.tile_size/2), i) for i in range(self.tile_size)]
+        #self.left = [(int(self.tile_size / 2), i) for i in range(self.tile_size, 0, -1)]
 
     def find_path(self):
         with PrologMQI() as mqi:
@@ -37,7 +39,6 @@ class Astar:
 
     def expand_tree(self, prolog_thread):
         explored_node = self.node_dict[self.openQ.get()[1]]
-
         if explored_node.pos == self.goal:
             self.closedQ.append(explored_node)
             return True
@@ -50,13 +51,13 @@ class Astar:
         result = prolog_thread.query(request)
 
         for direction in result[0]['R']:
-            if direction == "left" and not (explored_node.pos[0], explored_node.pos[1] - 1) == explored_node.father:
+            if direction == "left" and not (explored_node.pos[0], explored_node.pos[1] - 1) == explored_node.father and not ((explored_node.pos[0], explored_node.pos[1] - 1) in self.node_dict):
                 self.populate_node((explored_node.pos[0], explored_node.pos[1]-1), explored_node.pos)
-            if direction == "right" and not (explored_node.pos[0], explored_node.pos[1] + 1) == explored_node.father:
+            if direction == "right" and not (explored_node.pos[0], explored_node.pos[1] + 1) == explored_node.father and not ((explored_node.pos[0], explored_node.pos[1] + 1) in self.node_dict):
                 self.populate_node((explored_node.pos[0], explored_node.pos[1] + 1), explored_node.pos)
-            if direction == "up" and not (explored_node.pos[0] - 1, explored_node.pos[1]) == explored_node.father:
+            if direction == "up" and not (explored_node.pos[0] - 1, explored_node.pos[1]) == explored_node.father and not ((explored_node.pos[0] - 1, explored_node.pos[1]) in self.node_dict):
                 self.populate_node((explored_node.pos[0] - 1, explored_node.pos[1]), explored_node.pos)
-            if direction == "down" and not (explored_node.pos[0] + 1, explored_node.pos[1]) == explored_node.father:
+            if direction == "down" and not (explored_node.pos[0] + 1, explored_node.pos[1]) == explored_node.father and not ((explored_node.pos[0] + 1, explored_node.pos[1]) in self.node_dict):
                 self.populate_node((explored_node.pos[0] + 1, explored_node.pos[1]), explored_node.pos)
 
         self.closedQ.append(explored_node)
@@ -91,45 +92,45 @@ class Astar:
         coordinate_path = [(int(self.start[1] * self.tile_size + self.tile_size/2), int(self.start[0] * self.tile_size + self.tile_size/2))]
         for tile in path:
             coordinate_path.append((int(tile.pos[1] * self.tile_size + self.tile_size/2), int(tile.pos[0] * self.tile_size + self.tile_size/2)))
-
+        print(coordinate_path)
         return coordinate_path
 
-    def generate_path(self):
-        tile_path = self.generate_tile_path()
-        tile_path_len = len(tile_path)
-        pixel_path = []
-        for idx in range(tile_path_len-1):
-            if tile_path[idx][0] - tile_path[idx+1][0] == -1:
-                pixel_path = np.append(pixel_path, [np.array(self.down) + (np.array(tile_path[idx]) * self.tile_size)])
-            elif tile_path[idx][0] - tile_path[idx+1][0] == 1:
-                pixel_path = np.append(pixel_path, [np.array(self.up) + (np.array(tile_path[idx]) * self.tile_size)])
-            elif tile_path[idx][1] - tile_path[idx+1][1] == -1:
-                pixel_path = np.append(pixel_path, [np.array(self.right) + (np.array(tile_path[idx]) * self.tile_size)])
-            elif tile_path[idx][1] - tile_path[idx+1][1] == 1:
-                pixel_path = np.append(pixel_path, [np.array(self.left) + (np.array(tile_path[idx]) * self.tile_size)])
-        if tile_path[-2][0] - tile_path[-1][0] == -1:
-            pixel_path = np.append(pixel_path, [np.array(self.down) + (np.array(tile_path[-1]) * self.tile_size)])
-        elif tile_path[-2][0] - tile_path[-1][0] == 1:
-            pixel_path = np.append(pixel_path, [np.array(self.up) + (np.array(tile_path[-1]) * self.tile_size)])
-        elif tile_path[-2][1] - tile_path[-1][1] == -1:
-            pixel_path = np.append(pixel_path, [np.array(self.right) + (np.array(tile_path[-1]) * self.tile_size)])
-        elif tile_path[-2][1] - tile_path[-1][1] == 1:
-            pixel_path = np.append(pixel_path, [np.array(self.left) + (np.array(tile_path[-1]) * self.tile_size)])
-
-        return pixel_path
+    # def generate_path(self):
+    #     tile_path = self.generate_tile_path()
+    #     tile_path_len = len(tile_path)
+    #     pixel_path = []
+    #     for idx in range(tile_path_len-1):
+    #         if tile_path[idx][0] - tile_path[idx+1][0] == -1:
+    #             pixel_path = np.append(pixel_path, [np.array(self.down) + (np.array(tile_path[idx]) * self.tile_size)])
+    #         elif tile_path[idx][0] - tile_path[idx+1][0] == 1:
+    #             pixel_path = np.append(pixel_path, [np.array(self.up) + (np.array(tile_path[idx]) * self.tile_size)])
+    #         elif tile_path[idx][1] - tile_path[idx+1][1] == -1:
+    #             pixel_path = np.append(pixel_path, [np.array(self.right) + (np.array(tile_path[idx]) * self.tile_size)])
+    #         elif tile_path[idx][1] - tile_path[idx+1][1] == 1:
+    #             pixel_path = np.append(pixel_path, [np.array(self.left) + (np.array(tile_path[idx]) * self.tile_size)])
+    #     if tile_path[-2][0] - tile_path[-1][0] == -1:
+    #         pixel_path = np.append(pixel_path, [np.array(self.down) + (np.array(tile_path[-1]) * self.tile_size)])
+    #     elif tile_path[-2][0] - tile_path[-1][0] == 1:
+    #         pixel_path = np.append(pixel_path, [np.array(self.up) + (np.array(tile_path[-1]) * self.tile_size)])
+    #     elif tile_path[-2][1] - tile_path[-1][1] == -1:
+    #         pixel_path = np.append(pixel_path, [np.array(self.right) + (np.array(tile_path[-1]) * self.tile_size)])
+    #     elif tile_path[-2][1] - tile_path[-1][1] == 1:
+    #         pixel_path = np.append(pixel_path, [np.array(self.left) + (np.array(tile_path[-1]) * self.tile_size)])
+    #
+    #     return pixel_path
 
     def prolog_parser(self, pos):
         state_list = []
         if pos[1] > 0:
             type = self.predicate_transform(self.roadmap[pos[0]][pos[1]-1], "left")
             state_list.append(type)
-        if pos[1] < 23:
+        if pos[1] < len(self.roadmap[0]):
             type = self.predicate_transform(self.roadmap[pos[0]][pos[1]+1], "right")
             state_list.append(type)
         if pos[0] > 0:
             type = self.predicate_transform(self.roadmap[pos[0]-1][pos[1]], "up")
             state_list.append(type)
-        if pos[0] < 15:
+        if pos[0] < len(self.roadmap):
             type = self.predicate_transform(self.roadmap[pos[0]+1][pos[1]], "down")
             state_list.append(type)
 
@@ -185,11 +186,14 @@ class Planner:
             #dist = np.array([abs(treasure[0][0] - start[0]) + abs(treasure[0][1] - start[1])])
             #for idx in range(len(treasure)-1):
             #    dist = np.append(abs(treasure[idx+1][0] - treasure[idx][0]) + abs(treasure[idx+1][1] - treasure[idx][1]))
-            objective_pairs = np.array([(start, treasure[0])])
-            for idx in range(int(len(treasure)/2)):
-                objective_pairs = np.append(objective_pairs, (treasure[2*idx], treasure[idx+1]))
-            objective_pairs = np.append(treasure[-1], goal)
-
+            treasure2 = [(int(treasure[2*idx]), int(treasure[2*idx+1])) for idx in range(int(len(treasure)/2))]
+            new_pair = start, treasure2[0]
+            objective_pairs = [new_pair]
+            for idx, trea in enumerate(treasure2):
+                new_pair = objective_pairs[idx][1], trea
+                objective_pairs.append(new_pair)
+            new_pair = treasure2[-1], goal
+            objective_pairs.append(new_pair)
         else:
             start = (0, 0)
             goal = (0, 0)
@@ -200,23 +204,28 @@ class Planner:
                     elif value == 'E':
                         goal = (row, column)
             objective_pairs = (start, goal)
-
         return objective_pairs
 
     def create_plan(self):
         objective_pairs = self.obtain_objectives()
         paths = []
-        for idx in range(len(objective_pairs)-1):
-            print(objective_pairs[idx], objective_pairs[idx+1])
-            aStar = Astar(self.roadmap, objective_pairs[idx], objective_pairs[idx+1], self.tile_size)
-            paths = np.append(paths, aStar.find_path())
-        path = []
-        for idx in range(int(len(paths)/2)):
-            path.append((int(paths[2*idx]), int(paths[2*idx+1])))
+        if len(objective_pairs) > 2:
+            for idx in range(len(objective_pairs)):
+                aStar = Astar(self.roadmap, objective_pairs[idx][0], objective_pairs[idx][1], self.tile_size)
+                paths = np.append(paths, aStar.find_path())
+            path = []
+            for idx in range(int(len(paths)/2)):
+                path.append([int(paths[2*idx]), int(paths[2*idx+1])])
+
+        else:
+            for idx in range(len(objective_pairs)-1):
+                aStar = Astar(self.roadmap, objective_pairs[idx], objective_pairs[idx+1], self.tile_size)
+                paths = np.append(paths, aStar.find_path())
+            path = []
+            for idx in range(int(len(paths)/2)):
+                path.append((int(paths[2*idx]), int(paths[2*idx+1])))
+        print(path)
         return path
 
-planner = Planner('assets/mazeMedium_0', 50)
-path = planner.create_plan()
-print(path)
 # small maze 50
 # large maze 40
