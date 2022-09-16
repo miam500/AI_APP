@@ -33,6 +33,8 @@ class App:
         self.tile_size = tile_size
         self.mazefile = mazefile
         self.fuzz = fuzzy.createFuzzyController()
+        self.planner = Planner(self.mazefile, self.tile_size)
+        self.path = []
 
 
     def on_init(self):
@@ -50,7 +52,7 @@ class App:
         self._image_surf = pygame.transform.scale(self._image_surf, self.player.get_size())
         self._block_surf = pygame.image.load("assets/wall.png")
         # do generation thing
-        self.planner = Planner(self.mazefile, )
+        self.path = self.planner.create_plan()
 
     def on_keyboard_input(self, keys):
         if keys[K_RIGHT] or keys[K_d]:
@@ -87,9 +89,6 @@ class App:
         if (keys[K_ESCAPE]):
             self._running = False
 
-        if (keys[K_l]):
-            scores = self.perception()
-            print(scores)
 
     # FONCTION À Ajuster selon votre format d'instruction
     def on_AI_input(self, instruction, direction):
@@ -197,7 +196,7 @@ class App:
 
     def on_execute(self):
         self.on_init()
-
+        step = 0
         while self._running:
             self._clock.tick(GAME_CLOCK)
             for event in pygame.event.get():
@@ -224,6 +223,15 @@ class App:
                 self._running = False
                 self._win = True
             self.on_render()
+            if self.path[step+1][0] - self.path[step][0] == -1:
+                self.deplacement(self.path[step+1], "LEFT")
+            if self.path[step+1][0] - self.path[step][0] == 1:
+                self.deplacement(self.path[step+1], "RIGHT")
+            if self.path[step+1][1] - self.path[step][1] == -1:
+                self.deplacement(self.path[step+1], "UP")
+            if self.path[step+1][1] - self.path[step][1] == 1:
+                self.deplacement(self.path[step+1], "DOWN")
+            step += 1
             # do genetic thing
 
 
@@ -240,6 +248,7 @@ class App:
             self.on_death_render()
 
         self.on_cleanup()
+
 
     def deplacement(self, imaginary_line, direction):
 
