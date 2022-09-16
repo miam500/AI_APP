@@ -87,17 +87,23 @@ class App:
 
     # FONCTION À Ajuster selon votre format d'instruction
     def on_AI_input(self, instruction, direction):
-        instruction = round(instruction+0.5)
-        if direction == 'DOWN' or 'UP':
+        instruction = round(instruction)
+        if direction == 'DOWN' or direction == 'UP':
             if instruction < 0:
-                self.move_player_left()
+                instruction = instruction*-1
+                for d in range(instruction):
+                    self.move_player_left()
             else:
-                self.move_player_right()
-        if direction == 'left' or 'right':
+                for d in range(instruction):
+                    self.move_player_right()
+        if direction == 'LEFT' or direction == 'RIGHT':
             if instruction < 0:
-                self.move_player_up()
+                instruction = instruction * -1
+                for d in range(instruction):
+                    self.move_player_up()
             else:
-                self.move_player_down()
+                for d in range(instruction):
+                    self.move_player_down()
 
     def move_player_right(self):
         self.player.moveRight()
