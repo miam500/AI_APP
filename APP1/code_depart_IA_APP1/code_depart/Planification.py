@@ -1,6 +1,7 @@
 import csv
 from queue import PriorityQueue
 from swiplserver import PrologMQI
+import numpy as np
 
 
 class Tile:
@@ -12,18 +13,19 @@ class Tile:
 
 
 class Astar:
-    def __init__(self, mazefile, start, goal):
-        self.roadmap = []
-        with open(mazefile) as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter=',')
-            for row in csv_reader:
-                self.roadmap.append(row)
+    def __init__(self, roadmap, start, goal, tile_size):
+        self.roadmap = roadmap
         self.node_dict = {}
         self.start = start
         self.goal = goal
         self.openQ = PriorityQueue()
         self.closedQ = []
         self.populate_node(start, start)
+        self.tile_size = tile_size
+        self.down = [(i, int(self.tile_size/2)) for i in range(self.tile_size)]
+        self.up = [(i, int(self.tile_size / 2)) for i in range(self.tile_size, 0, -1)]
+        self.right = [(int(self.tile_size/2), i) for i in range(self.tile_size)]
+        self.left = [(int(self.tile_size / 2), i) for i in range(self.tile_size, 0, -1)]
 
     def find_path(self):
         with PrologMQI() as mqi:
@@ -78,7 +80,7 @@ class Astar:
             node.h = abs(self.goal[0] - node.pos[0]) + abs(self.goal[1] - node.pos[1])
             return node.g + node.h
 
-    def generate_path(self):
+    def generate_tile_path(self):
         path_node = self.closedQ.pop()
         father_node = self.node_dict[path_node.father]
         path = [path_node]
@@ -89,7 +91,32 @@ class Astar:
         coordinate_path = [self.start]
         for tile in path:
             coordinate_path.append(tile.pos)
+
         return coordinate_path
+
+    def generate_path(self):
+        tile_path = self.generate_tile_path()
+        tile_path_len = len(tile_path)
+        pixel_path = []
+        for idx in range(tile_path_len-1):
+            if tile_path[idx][0] - tile_path[idx+1][0] == -1:
+                pixel_path = np.append(pixel_path, np.array(self.down) + (np.array(tile_path[idx]) * self.tile_size))
+            elif tile_path[idx][0] - tile_path[idx+1][0] == 1:
+                pixel_path = np.append(pixel_path, np.array(self.up) + (np.array(tile_path[idx]) * self.tile_size))
+            elif tile_path[idx][1] - tile_path[idx+1][1] == -1:
+                pixel_path = np.append(pixel_path, np.array(self.right) + (np.array(tile_path[idx]) * self.tile_size))
+            elif tile_path[idx][1] - tile_path[idx+1][1] == 1:
+                pixel_path = np.append(pixel_path, np.array(self.left) + (np.array(tile_path[idx]) * self.tile_size))
+        if tile_path[-2][0] - tile_path[-1][0] == -1:
+            pixel_path = np.append(pixel_path, np.array(self.down) + (np.array(tile_path[-1]) * self.tile_size))
+        elif tile_path[-2][0] - tile_path[-1][0] == 1:
+            pixel_path = np.append(pixel_path, np.array(self.up) + (np.array(tile_path[-1]) * self.tile_size))
+        elif tile_path[-2][1] - tile_path[-1][1] == -1:
+            pixel_path = np.append(pixel_path, np.array(self.right) + (np.array(tile_path[-1]) * self.tile_size))
+        elif tile_path[-2][1] - tile_path[-1][1] == 1:
+            pixel_path = np.append(pixel_path, np.array(self.left) + (np.array(tile_path[-1]) * self.tile_size))
+
+        return pixel_path
 
     def prolog_parser(self, pos):
         state_list = []
@@ -130,11 +157,62 @@ class Astar:
         elif symbol == "S":
             return "start("+direction+")"
 
+class Planner:
+    def __init__(self, mazefile, tile_size, strategy='finnish'):
+        self.mazefile = mazefile
+        self.roadmap = []
+        with open(mazefile) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            for row in csv_reader:
+                self.roadmap.append(row)
+        self.strategy = strategy
+        self.tile_size = tile_size
 
-star = Astar('assets/mazeMedium_0', (0, 1), (15, 22))
-path = star.find_path()
-print(path)
+    def obtain_objectives(self):
+        objective_pairs = []
+        if self.strategy == 'greedy':
+            start = (0, 0)
+            goal = (0, 0)
+            treasure = []
+            for row, values in enumerate(self.roadmap):
+                for column, value in enumerate(values):
+                    if value == 'S':
+                        start = (row, column)
+                    elif value == 'E':
+                        goal = (row, column)
+                    elif value == 'C' or value == 'T':
+                        treasure = np.append(treasure, (row, column))
+            #dist = np.array([abs(treasure[0][0] - start[0]) + abs(treasure[0][1] - start[1])])
+            #for idx in range(len(treasure)-1):
+            #    dist = np.append(abs(treasure[idx+1][0] - treasure[idx][0]) + abs(treasure[idx+1][1] - treasure[idx][1]))
+            objective_pairs = np.array([(start, treasure[0])])
+            for idx in range(len(treasure)-1):
+                objective_pairs = np.append(objective_pairs, (treasure[idx], treasure[idx+1]))
+            objective_pairs = np.append(treasure[-1], goal)
 
+        else:
+            start = (0, 0)
+            goal = (0, 0)
+            for row, values in enumerate(self.roadmap):
+                for column, value in enumerate(values):
+                    if value == 'S':
+                        start = (row, column)
+                    elif value == 'E':
+                        goal = (row, column)
+            objective_pairs = (start, goal)
 
+        return objective_pairs
 
+    def create_plan(self):
+        objective_pairs = self.obtain_objectives()
+        paths = []
+        for objective in objective_pairs:
+            aStar = Astar(self.roadmap, objective[0], objective[1], self.tile_size)
+            paths = np.append(paths, aStar.find_path())
+        return paths
 
+#star = Astar('assets/mazeMedium_0', (0, 1), (15, 22))
+#path = star.find_path()
+#print(path)
+# small maze 50
+# large maze 40
