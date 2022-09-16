@@ -18,7 +18,7 @@ def createFuzzyController():
     item = ctrl.Antecedent(np.linspace(-31, 20, 1000), 'item')
 
     #out
-    move = ctrl.Consequent(np.linspace(-13.5, 13.5, 1000), 'move', defuzzify_method='centroid')
+    move = ctrl.Consequent(np.linspace(-10, 10, 1000), 'move', defuzzify_method='centroid')
 
     # Accumulation (accumulation_method) methods for fuzzy variables:
     #    np.fmax

@@ -24,10 +24,6 @@ class Astar:
         self.populate_node(start, start)
         self.tile_size = tile_size
         self.iteration = 0
-        #self.down = [(i, int(self.tile_size/2)) for i in range(self.tile_size)]
-        #self.up = [(i, int(self.tile_size / 2)) for i in range(self.tile_size, 0, -1)]
-        #self.right = [(int(self.tile_size/2), i) for i in range(self.tile_size)]
-        #self.left = [(int(self.tile_size / 2), i) for i in range(self.tile_size, 0, -1)]
 
     def find_path(self):
         with PrologMQI() as mqi:
@@ -38,6 +34,8 @@ class Astar:
                 return self.generate_tile_path()
 
     def expand_tree(self, prolog_thread):
+        if self.openQ.qsize() == 0:
+            return True # will be flagged in other function
         explored_node = self.node_dict[self.openQ.get()[1]]
         if explored_node.pos == self.goal:
             self.closedQ.append(explored_node)
@@ -64,9 +62,11 @@ class Astar:
         return False
 
     def populate_node(self, pos, father):
+        assert self.roadmap[pos[0]][pos[1]] != '1', print("position is not valid")
         new_node = Tile()
         new_node.pos = pos
         new_node.father = father
+        assert new_node.pos not in self.node_dict, print("duplicate node, node already explored")
         self.node_dict[new_node.pos] = new_node
         self.openQ.put((self.calculate_cost(new_node), new_node.pos))
 
@@ -83,6 +83,9 @@ class Astar:
 
     def generate_tile_path(self):
         path_node = self.closedQ.pop()
+        if path_node.pos != self.goal:
+            print("no possible path")
+            return []
         father_node = self.node_dict[path_node.father]
         path = [path_node]
         while not father_node.pos == self.start:
@@ -92,32 +95,7 @@ class Astar:
         coordinate_path = [(int(self.start[1] * self.tile_size + self.tile_size/2), int(self.start[0] * self.tile_size + self.tile_size/2))]
         for tile in path:
             coordinate_path.append((int(tile.pos[1] * self.tile_size + self.tile_size/2), int(tile.pos[0] * self.tile_size + self.tile_size/2)))
-        print(coordinate_path)
         return coordinate_path
-
-    # def generate_path(self):
-    #     tile_path = self.generate_tile_path()
-    #     tile_path_len = len(tile_path)
-    #     pixel_path = []
-    #     for idx in range(tile_path_len-1):
-    #         if tile_path[idx][0] - tile_path[idx+1][0] == -1:
-    #             pixel_path = np.append(pixel_path, [np.array(self.down) + (np.array(tile_path[idx]) * self.tile_size)])
-    #         elif tile_path[idx][0] - tile_path[idx+1][0] == 1:
-    #             pixel_path = np.append(pixel_path, [np.array(self.up) + (np.array(tile_path[idx]) * self.tile_size)])
-    #         elif tile_path[idx][1] - tile_path[idx+1][1] == -1:
-    #             pixel_path = np.append(pixel_path, [np.array(self.right) + (np.array(tile_path[idx]) * self.tile_size)])
-    #         elif tile_path[idx][1] - tile_path[idx+1][1] == 1:
-    #             pixel_path = np.append(pixel_path, [np.array(self.left) + (np.array(tile_path[idx]) * self.tile_size)])
-    #     if tile_path[-2][0] - tile_path[-1][0] == -1:
-    #         pixel_path = np.append(pixel_path, [np.array(self.down) + (np.array(tile_path[-1]) * self.tile_size)])
-    #     elif tile_path[-2][0] - tile_path[-1][0] == 1:
-    #         pixel_path = np.append(pixel_path, [np.array(self.up) + (np.array(tile_path[-1]) * self.tile_size)])
-    #     elif tile_path[-2][1] - tile_path[-1][1] == -1:
-    #         pixel_path = np.append(pixel_path, [np.array(self.right) + (np.array(tile_path[-1]) * self.tile_size)])
-    #     elif tile_path[-2][1] - tile_path[-1][1] == 1:
-    #         pixel_path = np.append(pixel_path, [np.array(self.left) + (np.array(tile_path[-1]) * self.tile_size)])
-    #
-    #     return pixel_path
 
     def prolog_parser(self, pos):
         state_list = []
@@ -183,9 +161,7 @@ class Planner:
                         goal = (row, column)
                     elif value == 'C' or value == 'T':
                         treasure = np.append(treasure, (row, column))
-            #dist = np.array([abs(treasure[0][0] - start[0]) + abs(treasure[0][1] - start[1])])
-            #for idx in range(len(treasure)-1):
-            #    dist = np.append(abs(treasure[idx+1][0] - treasure[idx][0]) + abs(treasure[idx+1][1] - treasure[idx][1]))
+
             treasure2 = [(int(treasure[2*idx]), int(treasure[2*idx+1])) for idx in range(int(len(treasure)/2))]
             new_pair = start, treasure2[0]
             objective_pairs = [new_pair]
@@ -224,8 +200,7 @@ class Planner:
             path = []
             for idx in range(int(len(paths)/2)):
                 path.append((int(paths[2*idx]), int(paths[2*idx+1])))
-        print(path)
+        assert(len(path) > 0)
         return path
 
-# small maze 50
-# large maze 40
+

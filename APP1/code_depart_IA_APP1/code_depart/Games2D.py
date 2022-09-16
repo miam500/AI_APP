@@ -1,11 +1,10 @@
 from pygame.locals import *
-import pygame
-
 from Player import *
 from Maze import *
 from Constants import *
 from Planification import Planner
 import FuzzyLogic as fuzzy
+import genetic
 
 
 
@@ -33,7 +32,7 @@ class App:
         self.tile_size = tile_size
         self.mazefile = mazefile
         self.fuzz = fuzzy.createFuzzyController()
-        self.planner = Planner(self.mazefile, self.tile_size, 'greedy')
+        self.planner = Planner(self.mazefile, self.tile_size)
         self.path = []
 
 
@@ -51,7 +50,6 @@ class App:
         self.player.set_size(PLAYER_SIZE*self.maze.tile_size_x, PLAYER_SIZE*self.maze.tile_size_x)
         self._image_surf = pygame.transform.scale(self._image_surf, self.player.get_size())
         self._block_surf = pygame.image.load("assets/wall.png")
-        # do generation thing
         self.path = self.planner.create_plan()
 
     def on_keyboard_input(self, keys):
@@ -77,14 +75,11 @@ class App:
 
         if keys[K_m]:
             for monster in self.maze.monsterList:
+                results = genetic.trainGA(monster)
+                self.player.set_attributes(results)
                 print(monster.mock_fight(self.player))
             # returns the number of rounds you win against the monster
             # you need to win all four rounds to beat it
-        if keys[K_t]:
-            # self.fuzz.input['direction'] = -0.25 #up: -0.75,down -0.25, left 0.25, right 0.75
-            # self.fuzz.input['y_ob'] = 0.0
-
-            pass
 
         if (keys[K_ESCAPE]):
             self._running = False
@@ -157,6 +152,8 @@ class App:
     def on_monster_collision(self):
         for monster in self.maze.monsterList:
             if self.player.get_rect().colliderect(monster.rect):
+                results = genetic.trainGA(monster)
+                self.player.set_attributes(results)
                 return monster
         return False
 
@@ -171,6 +168,9 @@ class App:
         self._display_surf.blit(text, (WIDTH - 120, 10))
         text = font.render("Time: " + format(self.timer, ".2f"), True, BLACK)
         self._display_surf.blit(text, (WIDTH - 300, 10))
+        for i in range(len(self.path) - 1):
+            pygame.draw.line(self._display_surf, "blue", self.path[i], self.path[i + 1])
+        pygame.display.flip()
 
     def on_render(self):
         self.maze_render()
@@ -196,7 +196,6 @@ class App:
 
     def on_execute(self):
         self.on_init()
-        print('hello')
         step = 0
         while self._running:
             self._clock.tick(GAME_CLOCK)
@@ -208,7 +207,6 @@ class App:
             pygame.event.pump()
             keys = pygame.key.get_pressed()
             self.on_keyboard_input(keys)
-            # self.on_AI_input(instruction)
             if self.on_coin_collision():
                 self.score += 1
             if self.on_treasure_collision():
@@ -241,7 +239,6 @@ class App:
                 if self.player.get_position()[1] > self.path[step+1][1]:
                     print("going down")
                     step += 1
-            # do genetic thing
 
 
         while self._win:
@@ -269,31 +266,28 @@ class App:
         it_y = -30
         o_in_my_way = []
         i_in_my_way = []
-        # imaginary_line = (60, 60)
-        # direction = 'LEFT'
         if direction == 'DOWN':
             # ---- direction objectif ----
             self.move_player_down()
             self.move_player_down()
             # -- determine les inputs ------------------------
-            position_x = imaginary_line[0] - (position_x + 10)
+            position_x = imaginary_line[0] - (position_x + 10 * self.tile_size/50)
             # ---- selection obstacle
             for o in obstacle:
                 if position_y <= o[1]:
                     o_in_my_way.append(o)
             if o_in_my_way:
                 obs_x = o_in_my_way[min((abs(o[1]), j) for j, o in enumerate(o_in_my_way))[1]][0]
-                obs_x = imaginary_line[0] - (obs_x + 5)
+                obs_x = imaginary_line[0] - (obs_x + 5 * self.tile_size/50)
             # ---- selection item
             for it in item:
                 if position_y <= it[1]:
                     i_in_my_way.append(it)
             if i_in_my_way:
                 it_x = i_in_my_way[min((abs(it[1]), j) for j, it in enumerate(i_in_my_way))[1]][0]
-                it_x = imaginary_line[0] - (it_x + 5)
+                it_x = imaginary_line[0] - (it_x + 5 * self.tile_size/50)
 
             # --- send les inputs ---------------------
-            #print(it_x, obs_x, position_x)
             # ---- input obst
             self.fuzz.input['obst'] = obs_x
             # ---- input personnage
@@ -308,24 +302,23 @@ class App:
             self.move_player_up()
             self.move_player_up()
             # -- determine les inputs ------------------------
-            position_x = imaginary_line[0] - (position_x + 10)
+            position_x = imaginary_line[0] - (position_x + 10 * self.tile_size/50)
             # ---- selection obstacle
             for o in obstacle:
-                if position_y + 20 >= o[1]:
+                if position_y + 20 * self.tile_size/50 >= o[1]:
                     o_in_my_way.append(o)
             if o_in_my_way:
                 obs_x = o_in_my_way[max((abs(o[1]), j) for j, o in enumerate(o_in_my_way))[1]][0]
-                obs_x = imaginary_line[0] - (obs_x + 5)
+                obs_x = imaginary_line[0] - (obs_x + 5 * self.tile_size/50)
             # ---- selection item
             for it in item:
-                if position_y + 20 >= it[1]:
+                if position_y + 20 * self.tile_size/50 >= it[1]:
                     i_in_my_way.append(it)
             if i_in_my_way:
                 it_x = i_in_my_way[max((abs(it[1]), j) for j, it in enumerate(i_in_my_way))[1]][0]
-                it_x = imaginary_line[0] - (it_x + 5)
+                it_x = imaginary_line[0] - (it_x + 5 * self.tile_size/50)
 
             # --- send les inputs ---------------------
-            #print(it_x, obs_x, position_x)
             # ---- input obst
             self.fuzz.input['obst'] = obs_x
             # ---- input personnage
@@ -341,24 +334,23 @@ class App:
             self.move_player_left()
             self.move_player_left()
             # -- determine les inputs ------------------------
-            position_y = imaginary_line[1] - (position_y + 10)
+            position_y = imaginary_line[1] - (position_y + 10 * self.tile_size/50)
             # ---- selection obstacle ----
             for o in obstacle:
                 if position_x >= o[0]:
                     o_in_my_way.append(o)
             if o_in_my_way:
                 obs_y = o_in_my_way[max((abs(o[1]), j) for j, o in enumerate(o_in_my_way))[1]][1]
-                obs_y = imaginary_line[1] - (obs_y + 5)
+                obs_y = imaginary_line[1] - (obs_y + 5 * self.tile_size/50)
             # ---- selection item ----
             for it in item:
                 if position_x >= it[0]:
                     i_in_my_way.append(it)
             if i_in_my_way:
                 it_y = i_in_my_way[max((abs(it[1]), j) for j, it in enumerate(i_in_my_way))[1]][1]
-                it_y = imaginary_line[1] - (it_y + 5)
+                it_y = imaginary_line[1] - (it_y + 5 * self.tile_size/50)
 
             # --- send inputs
-            #print(it_y, obs_y, position_y)
             # ---- input obst
             self.fuzz.input['obst'] = obs_y
             # ---- input personnage
@@ -373,7 +365,7 @@ class App:
             self.move_player_right()
             self.move_player_right()
             # -- determine les inputs ------------------------
-            position_y = imaginary_line[1] - (position_y + 10)
+            position_y = imaginary_line[1] - (position_y + 10 * self.tile_size/50)
             # ---- selection obstacle ----
             o_in_my_way = []
             for o in obstacle:
@@ -381,17 +373,16 @@ class App:
                     o_in_my_way.append(o)
             if o_in_my_way:
                 obs_y = o_in_my_way[max((abs(o[1]), j) for j, o in enumerate(o_in_my_way))[1]][1]
-                obs_y = imaginary_line[1] - (obs_y + 5)
+                obs_y = imaginary_line[1] - (obs_y + 5 * self.tile_size/50)
             # ---- selection item ----
             for it in item:
                 if position_x <= it[0]:
                     i_in_my_way.append(it)
             if i_in_my_way:
                 it_y = i_in_my_way[max((abs(it[1]), j) for j, it in enumerate(i_in_my_way))[1]][1]
-                it_y = imaginary_line[1] - (it_y + 5)
+                it_y = imaginary_line[1] - (it_y + 5 * self.tile_size/50)
             # --- faire les inputs
 
-            #print(obs_y + 5, position_y + 10)
             # ---- input obst
             self.fuzz.input['obst'] = obs_y
             # ---- input personnage
@@ -402,9 +393,8 @@ class App:
             self.fuzz.compute()
 
         # get the output from the fuzzy system
-        move = self.fuzz.output['move']
+        move = self.fuzz.output['move'] * self.tile_size/50
         print(move)
 
         self.on_AI_input(move, direction)
-        # self.on_AI_input(movey, 'y')
         self.on_render()
