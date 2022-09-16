@@ -4,11 +4,9 @@ import pygame
 from Player import *
 from Maze import *
 from Constants import *
-<<<<<<< HEAD
 from Planification import Planner
-=======
 import FuzzyLogic as fuzzy
->>>>>>> c4c1e951ebdaf1764f93d970e8867dd75a8d89cd
+
 
 
 class App:
@@ -31,13 +29,11 @@ class App:
         self.timer = 0.0
         self.player = Player()
         self.maze = Maze(mazefile)
-<<<<<<< HEAD
         self.fuzz = fuzz_ctrl
         self.tile_size = tile_size
         self.mazefile = mazefile
-=======
         self.fuzz = fuzzy.createFuzzyController()
->>>>>>> c4c1e951ebdaf1764f93d970e8867dd75a8d89cd
+
 
     def on_init(self):
         pygame.init()
@@ -85,25 +81,8 @@ class App:
         if keys[K_t]:
             # self.fuzz.input['direction'] = -0.25 #up: -0.75,down -0.25, left 0.25, right 0.75
             # self.fuzz.input['y_ob'] = 0.0
-<<<<<<< HEAD
+
             pass
-=======
-            for i in range(1):
-                [up, down, left, right] = self.perception()
-                self.fuzz.input['up'] = up
-                self.fuzz.input['down'] = down + 25
-                self.fuzz.input['left'] = left
-                self.fuzz.input['right'] = right
-                self.fuzz.compute()
-
-                # TODO: get the output from the fuzzy system
-                movex = self.fuzz.output['move_x'] * 10
-                movey = self.fuzz.output['horisontal'] * 10
-                print(movex, movey)
-
-                self.on_AI_input(movex, 'x')
-                self.on_AI_input(movey, 'y')
-                self.on_render()
 
         if (keys[K_ESCAPE]):
             self._running = False
@@ -111,7 +90,6 @@ class App:
         if (keys[K_l]):
             scores = self.perception()
             print(scores)
->>>>>>> c4c1e951ebdaf1764f93d970e8867dd75a8d89cd
 
     # FONCTION À Ajuster selon votre format d'instruction
     def on_AI_input(self, instruction, direction):
