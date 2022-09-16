@@ -4,6 +4,7 @@ import pygame
 from Player import *
 from Maze import *
 from Constants import *
+from Planification import Planner
 
 
 class App:
@@ -13,7 +14,7 @@ class App:
 
     item_value = 2
 
-    def __init__(self, mazefile):
+    def __init__(self, mazefile, fuzz_ctrl, tile_size):
         self._running = True
         self._win = False
         self._dead = False
@@ -26,6 +27,9 @@ class App:
         self.timer = 0.0
         self.player = Player()
         self.maze = Maze(mazefile)
+        self.fuzz = fuzz_ctrl
+        self.tile_size = tile_size
+        self.mazefile = mazefile
 
     def on_init(self):
         pygame.init()
@@ -41,6 +45,8 @@ class App:
         self.player.set_size(PLAYER_SIZE*self.maze.tile_size_x, PLAYER_SIZE*self.maze.tile_size_x)
         self._image_surf = pygame.transform.scale(self._image_surf, self.player.get_size())
         self._block_surf = pygame.image.load("assets/wall.png")
+        # do generation thing
+        self.planner = Planner(self.mazefile, )
 
     def on_keyboard_input(self, keys):
         if keys[K_RIGHT] or keys[K_d]:
@@ -71,60 +77,21 @@ class App:
         if keys[K_t]:
             # self.fuzz.input['direction'] = -0.25 #up: -0.75,down -0.25, left 0.25, right 0.75
             # self.fuzz.input['y_ob'] = 0.0
-            for i in range(1):
-                [up, down, left, right] = self.perception()
-                self.fuzz.input['up_p'] = up - 20
-                self.fuzz.input['down_p'] = down + 40
-                self.fuzz.input['left_p'] = left
-                self.fuzz.input['right_p'] = right
-                self.fuzz.compute()
-
-                # TODO: get the output from the fuzzy system
-                movex = self.fuzz.output['move_x'] * 10
-                movey = self.fuzz.output['move_y'] * 10
-                print(movex, movey)
-
-                self.on_AI_input(movex, 'x')
-                self.on_AI_input(movey, 'y')
-                self.on_render()
-
-        if (keys[K_ESCAPE]):
-            self._running = False
-
-        if (keys[K_l]):
-            scores = self.perception()
-            print(scores)
+            pass
 
     # FONCTION À Ajuster selon votre format d'instruction
-    def on_AI_input(self, instruction, axe):
-        instruction = round(instruction + 0.5)
-        if instruction < 0:
-            instruction = instruction * -1
-            if axe == 'x':
-                for i in range(instruction):
-                    self.move_player_left()
+    def on_AI_input(self, instruction, direction):
+        instruction = round(instruction+0.5)
+        if direction == 'DOWN' or 'UP':
+            if instruction < 0:
+                self.move_player_left()
             else:
-                for i in range(instruction):
-                    self.move_player_up()
-
-        else:
-            if axe == 'x':
-                for i in range(instruction):
-                    self.move_player_right()
+                self.move_player_right()
+        if direction == 'left' or 'right':
+            if instruction < 0:
+                self.move_player_up()
             else:
-                for i in range(instruction):
-                    self.move_player_down()
-
-            # if instruction == 'LEFT':
-            #    self.move_player_left()
-            # if instruction == 'RIGHT':
-            #    self.move_player_right()
-            # if instruction == 'LEFT':
-            #    self.move_player_left()
-            # if instruction == 'UP':
-            #    self.move_player_up()
-            # if instruction == 'DOWN':
-            #    self.move_player_down()
+                self.move_player_down()
 
     def move_player_right(self):
         self.player.moveRight()
@@ -245,6 +212,8 @@ class App:
                 self._running = False
                 self._win = True
             self.on_render()
+            # do genetic thing
+
 
         while self._win:
             for event in pygame.event.get():
@@ -260,162 +229,152 @@ class App:
 
         self.on_cleanup()
 
-    def perception(self):
-        perception_list = self.maze.make_perception_list(self.player, self._display_surf)
-        position = self.player.get_position()
-        up_perception = self.directional_perception(perception_list, position, "up")
-        down_perception = self.directional_perception(perception_list, position, "down")
-        left_perception = self.directional_perception(perception_list, position, "left")
-        right_perception = self.directional_perception(perception_list, position, "right")
-        return [up_perception, down_perception, left_perception, right_perception]
+    def deplacement(self, imaginary_line, direction):
 
-    def directional_perception(self, perception_list, position, direction):
-        score = 1000
+        wall, obstacle, item, monstre = self.maze.make_perception_list(self.player, self._display_surf)
+        position_x, position_y = self.player.get_position()
+        obs_x = -30
+        obs_y = -30
+        it_x = -30
+        it_y = -30
+        o_in_my_way = []
+        i_in_my_way = []
+        # imaginary_line = (60, 60)
+        # direction = 'LEFT'
+        if direction == 'DOWN':
+            # ---- direction objectif ----
+            self.move_player_down()
+            self.move_player_down()
+            # -- determine les inputs ------------------------
+            position_x = imaginary_line[0] - (position_x + 10)
+            # ---- selection obstacle
+            for o in obstacle:
+                if position_y <= o[1]:
+                    o_in_my_way.append(o)
+            if o_in_my_way:
+                obs_x = o_in_my_way[min((abs(o[1]), j) for j, o in enumerate(o_in_my_way))[1]][0]
+                obs_x = imaginary_line[0] - (obs_x + 5)
+            # ---- selection item
+            for it in item:
+                if position_y <= it[1]:
+                    i_in_my_way.append(it)
+            if i_in_my_way:
+                it_x = i_in_my_way[min((abs(it[1]), j) for j, it in enumerate(i_in_my_way))[1]][0]
+                it_x = imaginary_line[0] - (it_x + 5)
 
-        if direction == "up":
+            # --- send les inputs ---------------------
+            print(it_x, obs_x, position_x)
+            # ---- input obst
+            self.fuzz.input['obst'] = obs_x
+            # ---- input personnage
+            self.fuzz.input['pos'] = position_x
+            # ---- input item
+            self.fuzz.input['item'] = it_x
 
-            for wall in perception_list[0]:
-                if wall[0] < position[0] + 20 and wall[1] < position[1] and wall[0] + 50 > position[0]:
-                    if wall[0] > position[0]:
-                        score = score - (20 - (wall[0] - position[0])) * (50 + (wall[1] + 50 - position[1]))
-                    elif position[0] <= wall[0] + 30:
-                        score = score - 20 * (50 + (wall[1] + 50 - position[1]))
-                    elif position[0] < wall[0] + 50:
-                        score = score - (wall[0] + 50 - position[0]) * (50 + (wall[1] + 50 - position[1]))
-            for obstacle in perception_list[1]:
-                if obstacle[0] + 10 > position[0] > obstacle[0] - 20 and obstacle[1] < position[1]:
-                    if obstacle[0] < position[0]:
-                        score = score - (obstacle[0] + 10 - position[0]) * (50 + (obstacle[1] + 10 - position[1]))
-                    elif obstacle[0] > position[0] > obstacle[0] - 10:
-                        score = score - 10 * (50 + (obstacle[1] + 10 - position[1]))
-                    else:
-                        score = score - (position[0] + 20 - obstacle[0]) * (50 + (obstacle[1] + 10 - position[1]))
-                elif obstacle[1] < position[1] + 5:
-                    score -= 100
-                elif obstacle[1] > position[1] + 5:
-                    score += 100
+            self.fuzz.compute()
 
-            for item in perception_list[2]:
-                if item[0] + 10 > position[0] > item[0] - 20 and item[1] < position[1]:
-                    if item[0] < position[0]:
-                        score = score + 2 * (item[0] + 10 - position[0]) * (50 - (item[1] + 10 - position[1]))
-                    elif item[0] > position[0] > item[0] - 10:
-                        score = score + 20 * (50 - (item[1] + 10 - position[1]))
-                    else:
-                        score = score + 2 * (position[0] + 20 - item[0]) * (50 - (item[1] + 10 - position[1]))
-                if item[1] < position[1] + 5:
-                    score += 100
-                if item[1] > position[1] + 5:
-                    score -= 100
+        elif direction == 'UP':
+            # ---- direction objectif ----
+            self.move_player_up()
+            self.move_player_up()
+            # -- determine les inputs ------------------------
+            position_x = imaginary_line[0] - (position_x + 10)
+            # ---- selection obstacle
+            for o in obstacle:
+                if position_y + 20 >= o[1]:
+                    o_in_my_way.append(o)
+            if o_in_my_way:
+                obs_x = o_in_my_way[max((abs(o[1]), j) for j, o in enumerate(o_in_my_way))[1]][0]
+                obs_x = imaginary_line[0] - (obs_x + 5)
+            # ---- selection item
+            for it in item:
+                if position_y + 20 >= it[1]:
+                    i_in_my_way.append(it)
+            if i_in_my_way:
+                it_x = i_in_my_way[max((abs(it[1]), j) for j, it in enumerate(i_in_my_way))[1]][0]
+                it_x = imaginary_line[0] - (it_x + 5)
 
-        elif direction == "down":
+            # --- send les inputs ---------------------
+            print(it_x, obs_x, position_x)
+            # ---- input obst
+            self.fuzz.input['obst'] = obs_x
+            # ---- input personnage
+            self.fuzz.input['pos'] = position_x
+            # ---- input item
+            self.fuzz.input['item'] = it_x
 
-            for wall in perception_list[0]:
-                if wall[0] < position[0] + 20 and wall[1] > position[1] and wall[0] + 50 > position[0]:
-                    if wall[0] > position[0]:
-                        score = score - (20 - (wall[0] - position[0])) * (50 + (position[1] + 20 - wall[1]))
-                    elif position[0] <= wall[0] + 30:
-                        score = score - 20 * (50 + (position[1] + 20 - wall[1]))
-                    elif position[0] < wall[0] + 50:
-                        score = score - (wall[0] + 50 - position[0]) * (50 + (position[1] + 20 - wall[1]))
-            for obstacle in perception_list[1]:
-                if obstacle[0] + 10 > position[0] > obstacle[0] - 20 and obstacle[1] > position[1]:
-                    if obstacle[0] < position[0]:
-                        score = score - (obstacle[0] + 10 - position[0]) * (50 + (position[1] + 20 - obstacle[1]))
-                    elif obstacle[0] > position[0] > obstacle[0] - 10:
-                        score = score - 10 * (50 + (position[1] + 20 - obstacle[1]))
-                    else:
-                        score = score - (position[0] + 20 - obstacle[0]) * (50 + (position[1] + 20 - obstacle[1]))
-                elif obstacle[1] > position[1] + 5:
-                    score -= 100
-                elif obstacle[1] < position[1] + 5:
-                    score += 100
+            self.fuzz.compute()
 
-            for item in perception_list[2]:
-                if item[0] + 10 > position[0] > item[0] - 20 and item[1] > position[1]:
-                    if item[0] < position[0]:
-                        score = score + 2 * (item[0] + 10 - position[0]) * (50 - (position[1] + 20 - item[1]))
-                    elif item[0] > position[0] > item[0] - 10:
-                        score = score + 20 * (50 - (position[1] + 20 - item[1]))
-                    else:
-                        score = score + 2 * (position[0] + 20 - item[0]) * (50 - (position[1] + 20 - item[1]))
-                if item[1] > position[1] + 5:
-                    score += 100
-                if item[1] < position[1] + 5:
-                    score -= 100
+        elif direction == 'LEFT':
+            # ---- direction objectif ----
+            self.move_player_left()
+            self.move_player_left()
+            self.move_player_left()
+            # -- determine les inputs ------------------------
+            position_y = imaginary_line[1] - (position_y + 10)
+            # ---- selection obstacle ----
+            for o in obstacle:
+                if position_x >= o[0]:
+                    o_in_my_way.append(o)
+            if o_in_my_way:
+                obs_y = o_in_my_way[max((abs(o[1]), j) for j, o in enumerate(o_in_my_way))[1]][1]
+                obs_y = imaginary_line[1] - (obs_y + 5)
+            # ---- selection item ----
+            for it in item:
+                if position_x >= it[0]:
+                    i_in_my_way.append(it)
+            if i_in_my_way:
+                it_y = i_in_my_way[max((abs(it[1]), j) for j, it in enumerate(i_in_my_way))[1]][1]
+                it_y = imaginary_line[1] - (it_y + 5)
 
-        elif direction == "left":
+            # --- send inputs
+            print(it_y, obs_y, position_y)
+            # ---- input obst
+            self.fuzz.input['obst'] = obs_y
+            # ---- input personnage
+            self.fuzz.input['pos'] = position_y
+            # ---- input item
+            self.fuzz.input['item'] = it_y
 
-            for wall in perception_list[0]:
-                if wall[1] < position[1] + 20 and wall[0] < position[0] and wall[1] + 50 > position[1]:
-                    if wall[1] > position[1]:
-                        score = score - (20 - (wall[1] - position[1])) * (50 + (wall[0] + 50 - position[0]))
-                    elif position[1] <= wall[1] + 30:
-                        score = score - 20 * (50 + (wall[0] + 50 - position[0]))
-                    elif position[1] < wall[1] + 50:
-                        score = score - (wall[1] + 50 - position[1]) * (50 + (wall[0] + 50 - position[0]))
-            for obstacle in perception_list[1]:
-                if obstacle[1] + 10 > position[1] > obstacle[1] - 20 and position[0] > obstacle[0]:
-                    if obstacle[1] < position[1]:
-                        score = score - (obstacle[1] + 10 - position[1]) * (50 + (obstacle[0] - position[0] + 10))
-                    elif obstacle[1] > position[1] > obstacle[1] - 10:
-                        score = score - 10 * (50 + (obstacle[0] - position[0] + 10))
-                    else:
-                        score = score - (position[1] + 20 - obstacle[1]) * (50 + (obstacle[0] - position[0] + 10))
-                elif obstacle[0] < position[0] + 5:
-                    score -= 100
-                elif obstacle[0] > position[0] + 5:
-                    score += 100
+            self.fuzz.compute()
 
-            for item in perception_list[2]:
-                if item[1] + 10 > position[1] > item[1] - 20 and position[0] > item[0]:
-                    if item[1] < position[1]:
-                        score = score + 2 * (item[1] + 10 - position[1]) * (50 - (item[0] - position[0] + 10))
-                    elif item[1] > position[1] > item[1] - 10:
-                        score = score + 20 * (50 - (item[0] - position[0] + 10))
-                    else:
-                        score = score + 2 * (position[1] + 20 - item[1]) * (50 - (item[0] - position[0] + 10))
-                elif item[0] < position[0] + 5:
-                    score += 100
-                elif item[0] > position[0] + 5:
-                    score -= 100
+        elif direction == 'RIGHT':
+            # ---- direction objectif ----
+            self.move_player_right()
+            self.move_player_right()
+            # -- determine les inputs ------------------------
+            position_y = imaginary_line[1] - (position_y + 10)
+            # ---- selection obstacle ----
+            o_in_my_way = []
+            for o in obstacle:
+                if position_x <= o[0]:
+                    o_in_my_way.append(o)
+            if o_in_my_way:
+                obs_y = o_in_my_way[max((abs(o[1]), j) for j, o in enumerate(o_in_my_way))[1]][1]
+                obs_y = imaginary_line[1] - (obs_y + 5)
+            # ---- selection item ----
+            for it in item:
+                if position_x <= it[0]:
+                    i_in_my_way.append(it)
+            if i_in_my_way:
+                it_y = i_in_my_way[max((abs(it[1]), j) for j, it in enumerate(i_in_my_way))[1]][1]
+                it_y = imaginary_line[1] - (it_y + 5)
+            # --- faire les inputs
 
-        elif direction == "right":
+            print(obs_y + 5, position_y + 10)
+            # ---- input obst
+            self.fuzz.input['obst'] = obs_y
+            # ---- input personnage
+            self.fuzz.input['pos'] = position_y
+            # ---- input item
+            self.fuzz.input['item'] = it_y
 
-            for wall in perception_list[0]:
-                if wall[1] < position[1] + 20 and wall[0] > position[0] and wall[1] + 50 > position[1]:
-                    if wall[1] > position[1]:
-                        score = score - (20 - (wall[1] - position[1])) * (50 + (position[0] + 20 - wall[0]))
-                    elif position[1] <= wall[1] + 30:
-                        score = score - 20 * (50 + (position[0] + 20 - wall[0]))
-                    elif position[1] < wall[1] + 50:
-                        score = score - (wall[1] + 50 - position[1]) * (50 + (position[0] + 20 - wall[0]))
-            for obstacle in perception_list[1]:
-                if obstacle[1] + 10 > position[1] > obstacle[1] - 20 and position[0] < obstacle[0]:
-                    if obstacle[1] < position[1]:
-                        score = score - (obstacle[1] + 10 - position[1]) * (50 + (position[0] + 20 - obstacle[0]))
-                    elif obstacle[1] > position[1] > obstacle[1] - 10:
-                        score = score - 10 * (50 + (position[0] - obstacle[0] + 10))
-                    else:
-                        score = score - (position[1] + 20 - obstacle[1]) * (50 + (position[0] + 20 - obstacle[0]))
-                elif obstacle[1] > position[1] + 5:
-                    score -= 100
-                elif obstacle[1] < position[1] + 5:
-                    score += 100
+            self.fuzz.compute()
 
-            for item in perception_list[2]:
-                if item[1] + 10 > position[1] > item[1] - 20 and position[0] < item[0]:
-                    if item[1] < position[1]:
-                        score = score + 2 * (item[1] + 10 - position[1]) * (50 - (position[0] + 20 - item[0]))
-                    elif item[1] > position[1] > item[1] - 10:
-                        score = score + 20 * (50 - (position[0] + 20 - item[0]))
-                    else:
-                        score = score + 2 * (position[1] + 20 - item[1]) * (50 - (position[0] + 20 - item[0]))
-                elif item[0] > position[0] + 5:
-                    score += 100
-                elif item[0] < position[0] + 5:
-                    score -= 100
+        # get the output from the fuzzy system
+        move = self.fuzz.output['move']
+        print(move)
 
-        if score < 0:
-            score = 0
-        return int(score/20)
+        self.on_AI_input(move, direction)
+        # self.on_AI_input(movey, 'y')
+        self.on_render()
