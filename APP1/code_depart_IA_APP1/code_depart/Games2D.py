@@ -194,7 +194,7 @@ class App:
     def on_cleanup(self):
         pygame.quit()
 
-    def on_execute(self):
+    def on_execute(self, test_fuzzy = False):
         self.on_init()
         step = 0
         while self._running:
@@ -221,6 +221,17 @@ class App:
             if self.on_exit():
                 self._running = False
                 self._win = True
+            #--------------------------------------
+            #---- test du fuzzy
+            if test_fuzzy:
+                test_fuzz(self).move()
+                if self.tile_size < self.player.get_position()[0] < (2*self.tile_size) and self.tile_size < self.player.get_position()[1] < (2*self.tile_size):
+                    self._win = True
+                    self._running = False
+                else:
+                    self._dead = True
+                    self._running = False
+            #--------------------------------------
             self.on_render()
             if self.path[step+1][0] - self.path[step][0] < 0:
                 self.deplacement(self.path[step], "LEFT")
@@ -257,7 +268,6 @@ class App:
 
 
     def deplacement(self, imaginary_line, direction):
-
         wall, obstacle, item, monstre = self.maze.make_perception_list(self.player, self._display_surf)
         position_x, position_y = self.player.get_position()
         obs_x = -30
@@ -266,27 +276,26 @@ class App:
         it_y = -30
         o_in_my_way = []
         i_in_my_way = []
+
         if direction == 'DOWN':
             # ---- direction objectif ----
-            self.move_player_down()
             self.move_player_down()
             # -- determine les inputs ------------------------
             position_x = imaginary_line[0] - (position_x + 10 * self.tile_size/50)
             # ---- selection obstacle
             for o in obstacle:
-                if position_y <= o[1]:
+                if position_y < o[1]:
                     o_in_my_way.append(o)
             if o_in_my_way:
                 obs_x = o_in_my_way[min((abs(o[1]), j) for j, o in enumerate(o_in_my_way))[1]][0]
                 obs_x = imaginary_line[0] - (obs_x + 5 * self.tile_size/50)
             # ---- selection item
             for it in item:
-                if position_y <= it[1]:
+                if position_y < it[1]:
                     i_in_my_way.append(it)
             if i_in_my_way:
                 it_x = i_in_my_way[min((abs(it[1]), j) for j, it in enumerate(i_in_my_way))[1]][0]
-                it_x = imaginary_line[0] - (it_x + 5 * self.tile_size/50)
-
+                it_x = imaginary_line[0] - (it_x + 5 * self.tile_size/50
             # --- send les inputs ---------------------
             # ---- input obst
             self.fuzz.input['obst'] = obs_x
@@ -300,24 +309,22 @@ class App:
         elif direction == 'UP':
             # ---- direction objectif ----
             self.move_player_up()
-            self.move_player_up()
             # -- determine les inputs ------------------------
             position_x = imaginary_line[0] - (position_x + 10 * self.tile_size/50)
             # ---- selection obstacle
             for o in obstacle:
-                if position_y + 20 * self.tile_size/50 >= o[1]:
+                if position_y + (20 * self.tile_size/50) > o[1]:
                     o_in_my_way.append(o)
             if o_in_my_way:
                 obs_x = o_in_my_way[max((abs(o[1]), j) for j, o in enumerate(o_in_my_way))[1]][0]
                 obs_x = imaginary_line[0] - (obs_x + 5 * self.tile_size/50)
             # ---- selection item
             for it in item:
-                if position_y + 20 * self.tile_size/50 >= it[1]:
+                if position_y + 16 >= it[1]:
                     i_in_my_way.append(it)
             if i_in_my_way:
                 it_x = i_in_my_way[max((abs(it[1]), j) for j, it in enumerate(i_in_my_way))[1]][0]
                 it_x = imaginary_line[0] - (it_x + 5 * self.tile_size/50)
-
             # --- send les inputs ---------------------
             # ---- input obst
             self.fuzz.input['obst'] = obs_x
@@ -331,20 +338,18 @@ class App:
         elif direction == 'LEFT':
             # ---- direction objectif ----
             self.move_player_left()
-            self.move_player_left()
-            self.move_player_left()
             # -- determine les inputs ------------------------
             position_y = imaginary_line[1] - (position_y + 10 * self.tile_size/50)
             # ---- selection obstacle ----
             for o in obstacle:
-                if position_x >= o[0]:
+                if position_x + (20 * self.tile_size/50) > o[0]:
                     o_in_my_way.append(o)
             if o_in_my_way:
                 obs_y = o_in_my_way[max((abs(o[1]), j) for j, o in enumerate(o_in_my_way))[1]][1]
                 obs_y = imaginary_line[1] - (obs_y + 5 * self.tile_size/50)
             # ---- selection item ----
             for it in item:
-                if position_x >= it[0]:
+                if position_x + (20 * self.tile_size/50) >= it[0]:
                     i_in_my_way.append(it)
             if i_in_my_way:
                 it_y = i_in_my_way[max((abs(it[1]), j) for j, it in enumerate(i_in_my_way))[1]][1]
@@ -363,14 +368,12 @@ class App:
         elif direction == 'RIGHT':
             # ---- direction objectif ----
             self.move_player_right()
-            self.move_player_right()
             # -- determine les inputs ------------------------
             position_y = imaginary_line[1] - (position_y + 10 * self.tile_size/50)
             # ---- selection obstacle ----
-            o_in_my_way = []
             for o in obstacle:
                 if position_x <= o[0]:
-                    o_in_my_way.append(o)
+                   o_in_my_way.append(o)
             if o_in_my_way:
                 obs_y = o_in_my_way[max((abs(o[1]), j) for j, o in enumerate(o_in_my_way))[1]][1]
                 obs_y = imaginary_line[1] - (obs_y + 5 * self.tile_size/50)
@@ -381,8 +384,7 @@ class App:
             if i_in_my_way:
                 it_y = i_in_my_way[max((abs(it[1]), j) for j, it in enumerate(i_in_my_way))[1]][1]
                 it_y = imaginary_line[1] - (it_y + 5 * self.tile_size/50)
-            # --- faire les inputs
-
+            # --- send les inputs
             # ---- input obst
             self.fuzz.input['obst'] = obs_y
             # ---- input personnage
@@ -393,8 +395,7 @@ class App:
             self.fuzz.compute()
 
         # get the output from the fuzzy system
-        move = self.fuzz.output['move'] * self.tile_size/50
-        print(move)
+        move = self.fuzz.output['move']
 
         self.on_AI_input(move, direction)
         self.on_render()
