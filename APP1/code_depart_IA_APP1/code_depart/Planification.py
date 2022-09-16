@@ -100,21 +100,21 @@ class Astar:
         pixel_path = []
         for idx in range(tile_path_len-1):
             if tile_path[idx][0] - tile_path[idx+1][0] == -1:
-                pixel_path = np.append(pixel_path, np.array(self.down) + (np.array(tile_path[idx]) * self.tile_size))
+                pixel_path = np.append(pixel_path, [np.array(self.down) + (np.array(tile_path[idx]) * self.tile_size)])
             elif tile_path[idx][0] - tile_path[idx+1][0] == 1:
-                pixel_path = np.append(pixel_path, np.array(self.up) + (np.array(tile_path[idx]) * self.tile_size))
+                pixel_path = np.append(pixel_path, [np.array(self.up) + (np.array(tile_path[idx]) * self.tile_size)])
             elif tile_path[idx][1] - tile_path[idx+1][1] == -1:
-                pixel_path = np.append(pixel_path, np.array(self.right) + (np.array(tile_path[idx]) * self.tile_size))
+                pixel_path = np.append(pixel_path, [np.array(self.right) + (np.array(tile_path[idx]) * self.tile_size)])
             elif tile_path[idx][1] - tile_path[idx+1][1] == 1:
-                pixel_path = np.append(pixel_path, np.array(self.left) + (np.array(tile_path[idx]) * self.tile_size))
+                pixel_path = np.append(pixel_path, [np.array(self.left) + (np.array(tile_path[idx]) * self.tile_size)])
         if tile_path[-2][0] - tile_path[-1][0] == -1:
-            pixel_path = np.append(pixel_path, np.array(self.down) + (np.array(tile_path[-1]) * self.tile_size))
+            pixel_path = np.append(pixel_path, [np.array(self.down) + (np.array(tile_path[-1]) * self.tile_size)])
         elif tile_path[-2][0] - tile_path[-1][0] == 1:
-            pixel_path = np.append(pixel_path, np.array(self.up) + (np.array(tile_path[-1]) * self.tile_size))
+            pixel_path = np.append(pixel_path, [np.array(self.up) + (np.array(tile_path[-1]) * self.tile_size)])
         elif tile_path[-2][1] - tile_path[-1][1] == -1:
-            pixel_path = np.append(pixel_path, np.array(self.right) + (np.array(tile_path[-1]) * self.tile_size))
+            pixel_path = np.append(pixel_path, [np.array(self.right) + (np.array(tile_path[-1]) * self.tile_size)])
         elif tile_path[-2][1] - tile_path[-1][1] == 1:
-            pixel_path = np.append(pixel_path, np.array(self.left) + (np.array(tile_path[-1]) * self.tile_size))
+            pixel_path = np.append(pixel_path, [np.array(self.left) + (np.array(tile_path[-1]) * self.tile_size)])
 
         return pixel_path
 
@@ -186,8 +186,8 @@ class Planner:
             #for idx in range(len(treasure)-1):
             #    dist = np.append(abs(treasure[idx+1][0] - treasure[idx][0]) + abs(treasure[idx+1][1] - treasure[idx][1]))
             objective_pairs = np.array([(start, treasure[0])])
-            for idx in range(len(treasure)-1):
-                objective_pairs = np.append(objective_pairs, (treasure[idx], treasure[idx+1]))
+            for idx in range(int(len(treasure)/2)):
+                objective_pairs = np.append(objective_pairs, (treasure[2*idx], treasure[idx+1]))
             objective_pairs = np.append(treasure[-1], goal)
 
         else:
@@ -206,13 +206,17 @@ class Planner:
     def create_plan(self):
         objective_pairs = self.obtain_objectives()
         paths = []
-        for objective in objective_pairs:
-            aStar = Astar(self.roadmap, objective[0], objective[1], self.tile_size)
+        for idx in range(len(objective_pairs)-1):
+            print(objective_pairs[idx], objective_pairs[idx+1])
+            aStar = Astar(self.roadmap, objective_pairs[idx], objective_pairs[idx+1], self.tile_size)
             paths = np.append(paths, aStar.find_path())
-        return paths
+        path = []
+        for idx in range(int(len(paths)/2)):
+            path.append((int(paths[2*idx]), int(paths[2*idx+1])))
+        return path
 
-#star = Astar('assets/mazeMedium_0', (0, 1), (15, 22))
-#path = star.find_path()
-#print(path)
+planner = Planner('assets/mazeMedium_0', 50)
+path = planner.create_plan()
+print(path)
 # small maze 50
 # large maze 40
