@@ -88,9 +88,9 @@ class Astar:
             path_node = father_node
             father_node = self.node_dict[path_node.father]
             path = [path_node] + path
-        coordinate_path = [self.start]
+        coordinate_path = [(int(self.start[1] * self.tile_size + self.tile_size/2), int(self.start[0] * self.tile_size + self.tile_size/2))]
         for tile in path:
-            coordinate_path.append((int(tile.pos[0]+self.tile_size/2), int(tile.pos[1]+self.tile_size/2)))
+            coordinate_path.append((int(tile.pos[1] * self.tile_size + self.tile_size/2), int(tile.pos[0] * self.tile_size + self.tile_size/2)))
 
         return coordinate_path
 

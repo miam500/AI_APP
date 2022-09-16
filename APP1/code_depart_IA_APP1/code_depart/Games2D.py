@@ -223,21 +223,22 @@ class App:
                 self._running = False
                 self._win = True
             self.on_render()
-            if self.path[step][0] - self.path[step][0] < 0:
+            if self.path[step+1][0] - self.path[step][0] < 0:
                 self.deplacement(self.path[step], "LEFT")
-                if self.player.get_position()[0] < self.path[step][0]:
+                if self.player.get_position()[0] < self.path[step+1][0]:
                     step += 1
             if self.path[step+1][0] - self.path[step][0] > 0:
                 self.deplacement(self.path[step], "RIGHT")
-                if self.player.get_position()[0] > self.path[step][0]:
+                if self.player.get_position()[0] > self.path[step+1][0]:
                     step += 1
             if self.path[step+1][1] - self.path[step][1] < 0:
                 self.deplacement(self.path[step], "UP")
-                if self.player.get_position()[1] < self.path[step][1]:
+                if self.player.get_position()[1] < self.path[step+1][1]:
                     step += 1
             if self.path[step+1][1] - self.path[step][1] > 0:
                 self.deplacement(self.path[step], "DOWN")
-                if self.player.get_position()[1] > self.path[step][1]:
+                if self.player.get_position()[1] > self.path[step+1][1]:
+                    print("going down")
                     step += 1
             # do genetic thing
 
@@ -291,7 +292,7 @@ class App:
                 it_x = imaginary_line[0] - (it_x + 5)
 
             # --- send les inputs ---------------------
-            print(it_x, obs_x, position_x)
+            #print(it_x, obs_x, position_x)
             # ---- input obst
             self.fuzz.input['obst'] = obs_x
             # ---- input personnage
@@ -323,7 +324,7 @@ class App:
                 it_x = imaginary_line[0] - (it_x + 5)
 
             # --- send les inputs ---------------------
-            print(it_x, obs_x, position_x)
+            #print(it_x, obs_x, position_x)
             # ---- input obst
             self.fuzz.input['obst'] = obs_x
             # ---- input personnage
@@ -356,7 +357,7 @@ class App:
                 it_y = imaginary_line[1] - (it_y + 5)
 
             # --- send inputs
-            print(it_y, obs_y, position_y)
+            #print(it_y, obs_y, position_y)
             # ---- input obst
             self.fuzz.input['obst'] = obs_y
             # ---- input personnage
@@ -389,7 +390,7 @@ class App:
                 it_y = imaginary_line[1] - (it_y + 5)
             # --- faire les inputs
 
-            print(obs_y + 5, position_y + 10)
+            #print(obs_y + 5, position_y + 10)
             # ---- input obst
             self.fuzz.input['obst'] = obs_y
             # ---- input personnage
